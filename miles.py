@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # <--- ADICIONADO: Importação do CORS
 from services.ai_engine import AIEngine
 import os
 from dotenv import load_dotenv
@@ -7,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)  # <--- ADICIONADO: Liberação para o navegador acessar a API
 
 # 2. Busca a chave que o Windows/Dotenv carregou
 API_KEY = os.getenv("GEMINI_API_KEY")
