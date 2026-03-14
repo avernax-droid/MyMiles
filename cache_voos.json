@@ -1,0 +1,22 @@
+{
+    "be0f934f9a69156fc6d3575f0bd989b5": {
+        "voos": [
+            {
+                "cia": "American Airlines",
+                "milhas": 50000,
+                "taxas": 0.0,
+                "trecho": "São Paulo para Miami"
+            }
+        ]
+    },
+    "2576d9559d116df1ea8d5b9787e45fc2": {
+        "voos": [
+            {
+                "cia": "Latam",
+                "milhas": 45000,
+                "taxas": 300.0,
+                "trecho": "GRU-JFK"
+            }
+        ]
+    }
+}
