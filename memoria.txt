@@ -218,3 +218,70 @@ Infraestrutura (Docker): O ambiente isolado que garante que seu código rode igu
 Comunicação (API REST): O seu sistema já "fala" a língua da web via porta 5000.
 
 Integração de Dados: Você já processa arquivos reais (dadoslatam.json).
+
+------------------------------------------
+
+14/03 - Star Dockerfile
+
+Aqui está o "check-list" para retomar o seu trabalho no MyMiles:
+
+1. Iniciar o "Motor" (Docker Desktop)
+Assim que você ligar o PC:
+
+Abra o Docker Desktop (clique no ícone da baleia no Menu Iniciar).
+
+Espere a barrinha de carregamento sumir e o ícone ficar estável. Isso significa que o "motor" está pronto.
+
+2. Verificar se o container está rodando
+Abra o seu PowerShell na pasta C:\MyMiles e digite:
+
+PowerShell
+docker ps -a
+Se aparecer Up na coluna STATUS: Seu container já está rodando! Pode pular para o passo 4.
+
+Se aparecer Exited ou não aparecer nada: Significa que ele parou quando o PC desligou.
+
+3. Rodar o container
+Se ele estiver parado, basta dar o comando de "ligar":
+
+PowerShell
+docker start mymiles-app
+Após rodar, digite docker ps novamente só para confirmar que a coluna STATUS agora diz Up.
+
+4. Abrir o seu Dashboard
+Abra o VS Code (para continuar editando).
+
+Abra o seu navegador e acesse o index.html (aquela pasta C:\MyMiles que você já sabe).
+
+Cole o seu JSON e pronto! Tudo volta a funcionar como hoje.
+
+Dica de "Pro" para não sofrer:
+Se você quiser que o container ligue sozinho sempre que o Docker for aberto, você pode criar o container com uma "política de reinicialização".
+
+Se algum dia você quiser mudar isso, basta rodar este comando uma única vez no PowerShell:
+
+PowerShell
+docker update --restart unless-stopped mymiles-app
+Com isso, o Docker vai "lembrar" que o MyMiles deve ficar sempre rodando enquanto o Docker Desktop estiver aberto.
+
+Ficou claro o fluxo? Amanhã, quando você se sentar para trabalhar, é só seguir esses passos e o seu "cofre" de dados estará pronto para receber novas análises. Até a próxima sessão! 🚀
+
+refresh
+
+Para o nosso "refresh" ser 100% eficiente quando você voltar, só preciso que você tenha em mãos:
+
+O acesso ao seu ambiente: O repositório https://github.com/avernax-droid/MyMiles.
+
+O seu arquivo de dados (JSON): Aquele dadoslatam.json que usamos hoje. Se você tiver novos dados de outras cias aéreas (Smiles ou Azul) quando voltar, traga-os também! Isso nos ajudará a testar o motor da Fase 2.
+
+O que eu vou "lembrar" automaticamente:
+Que o seu servidor está rodando na porta 5000.
+
+Que o CORS está ativado para permitir a conversa entre o index.html e o Docker.
+
+Que a sua lógica de auditoria segue a regra: (milhas / 1000 * 10.0) + taxas.
+
+Visual do nosso "Próximo Passo":
+Quando você voltar, começaremos trabalhando na lógica de Destaque Visual. O plano é este:
+
+Você não precisa guardar nada extra. Quando você me disser "voltei", eu farei uma rápida checagem do status do container e partiremos direto para a melhoria da interface.

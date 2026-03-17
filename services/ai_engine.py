@@ -1,36 +1,27 @@
 import logging
-import time
-import random
 import json
 import os
 import hashlib
-from google import genai  # IMPORTANTE: Esta é a nova importação correta
+import time
+from google import genai
 
 class AIEngine:
     def __init__(self, api_key: str):
-        # A inicialização correta para a nova biblioteca
         self.client = genai.Client(api_key=api_key)
         self.cache_file = 'cache_voos.json'
+        
+        # USANDO O NOME EXATO DA SUA LISTA (Focado em velocidade)
+        self.model_id = "models/gemini-flash-latest" 
+        
         self._carregar_cache()
-        logging.info("AIEngine inicializado com a nova biblioteca google-genai.")
-
-    def _obter_modelos_disponiveis(self):
-        """Consulta a API para obter nomes de modelos válidos."""
-        try:
-            # Na nova API, a listagem de modelos é feita via client.models
-            modelos = [m.name for m in self.client.models.list() if "flash" in m.name]
-            return modelos if modelos else ["gemini-2.0-flash"]
-        except Exception as e:
-            logging.error(f"Erro ao listar modelos: {e}")
-            return ["gemini-2.0-flash"]
+        logging.info(f"AIEngine inicializado com sucesso. Modelo: {self.model_id}")
 
     def _carregar_cache(self):
         if os.path.exists(self.cache_file):
             try:
                 with open(self.cache_file, 'r', encoding='utf-8') as f:
                     self.cache = json.load(f)
-            except Exception as e:
-                logging.error(f"Erro ao ler cache: {e}")
+            except Exception:
                 self.cache = {}
         else:
             self.cache = {}
@@ -45,61 +36,41 @@ class AIEngine:
     def _gerar_hash(self, texto):
         return hashlib.md5(texto.strip().lower().encode()).hexdigest()
 
-    def test_connection(self):
-        try:
-            self.client.models.list()
-            return True
-        except Exception as e:
-            logging.error(f"Erro de conexão: {e}")
-            return False
-
-    def extrair_dados_voo(self, texto_bruto: str, max_tentativas=4):
+    def extrair_dados_voo(self, texto_bruto: str, max_tentativas=2):
         texto_hash = self._gerar_hash(texto_bruto)
         if texto_hash in self.cache:
-            logging.info("Resultado recuperado do cache local.")
+            logging.info("Cache: Retornando dados salvos.")
             return self.cache[texto_hash]
 
-        model_pool = self._obter_modelos_disponiveis()
-        texto_limpo = " ".join(texto_bruto.split())
-        prompt = (
-            "Extraia voos do texto e retorne estritamente JSON: "
-            "{'voos': [{'cia': '', 'milhas': 0, 'taxas': 0.0, 'trecho': ''}]}. "
-            f"Texto: {texto_limpo}"
+        # Prompt otimizado para a série 2.0/2.5
+        prompt_completo = (
+            "Extraia os voos do texto abaixo e retorne APENAS um JSON puro.\n"
+            "Formato: {'voos': [{'cia': str, 'milhas': int, 'taxas': float, 'trecho': str, 'voo': str}]}\n\n"
+            f"TEXTO: {texto_bruto}"
         )
 
-        tentativa = 0
-        while tentativa < max_tentativas:
-            model_id = model_pool[tentativa % len(model_pool)]
-            
+        for tentativa in range(max_tentativas):
             try:
-                logging.info(f"Tentativa {tentativa + 1} usando {model_id}...")
-                
-                # Nova sintaxe para geração de conteúdo
                 response = self.client.models.generate_content(
-                    model=model_id,
-                    contents=prompt,
-                    config={'response_mime_type': 'application/json'}
+                    model=self.model_id,
+                    contents=prompt_completo
                 )
                 
-                resultado = json.loads(response.text)
-                if resultado.get("voos") is not None:
+                if not response or not response.text:
+                    continue
+
+                # Limpa o Markdown
+                txt_limpo = response.text.replace('```json', '').replace('```', '').strip()
+                resultado = json.loads(txt_limpo)
+                
+                if "voos" in resultado:
                     self.cache[texto_hash] = resultado
                     self._salvar_cache()
-                return resultado
-
-            except Exception as e:
-                tentativa += 1
-                erro_str = str(e).lower()
+                    return resultado
                 
-                if any(err in erro_str for err in ["429", "quota", "limit", "500", "503"]):
-                    espera = (tentativa * 30) + random.uniform(10, 20)
-                    print(f"⚠️ Limite atingido ({model_id}). Aguardando {espera:.2f}s...")
-                    time.sleep(espera)
-                else:
-                    logging.error(f"Erro com modelo {model_id}: {e}")
-                    if "404" in erro_str:
-                        continue 
-                    break
-                    
+            except Exception as e:
+                logging.warning(f"Tentativa {tentativa + 1} falhou: {e}")
+                time.sleep(1)
+                continue
+
         return {"voos": []}
-    

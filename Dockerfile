@@ -11,9 +11,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia o restante do código e o cache existente
 COPY . .
 
-# Expõe a porta que o FastAPI vai usar
+# Expõe a porta que o Flask vai usar
 EXPOSE 5000
 
+# Adicionado --timeout 120 para dar tempo à IA de processar textos grandes
 # --bind 0.0.0.0:5000 diz ao Gunicorn para escutar em todas as interfaces na porta 5000
 # miles:app diz ao Gunicorn para procurar o objeto 'app' dentro do arquivo 'miles.py'
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "miles:app"]
+CMD ["gunicorn", "--timeout", "120", "--bind", "0.0.0.0:5000", "miles:app"]
