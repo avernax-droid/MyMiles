@@ -285,3 +285,11 @@ Visual do nosso "Próximo Passo":
 Quando você voltar, começaremos trabalhando na lógica de Destaque Visual. O plano é este:
 
 Você não precisa guardar nada extra. Quando você me disser "voltei", eu farei uma rápida checagem do status do container e partiremos direto para a melhoria da interface.
+
+==============
+17/03
+
+Contexto MyMiles: O projeto está estabilizado usando o modelo models/gemini-flash-latest via SDK google-genai no Docker.
+Resolvemos erros 404 e 429 de cota e ajustamos o ai_engine.py para usar prompts unificados (sem system_instruction).
+No frontend, o index.html já possui a lógica de destaque verde (🥇) para a menor milhagem, com CSS ajustado para sobrepor o Bootstrap.
+O backend roda em Gunicorn na porta 5000.
