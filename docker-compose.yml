@@ -1,0 +1,11 @@
+services:
+  mymiles:
+    build: .
+    container_name: mymiles_container
+    ports:
+      - "5000:5000"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    env_file:
+      - .env

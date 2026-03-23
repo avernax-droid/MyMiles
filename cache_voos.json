@@ -1,0 +1,100 @@
+{
+    "be0f934f9a69156fc6d3575f0bd989b5": {
+        "voos": [
+            {
+                "cia": "American Airlines",
+                "milhas": 50000,
+                "taxas": 0.0,
+                "trecho": "São Paulo para Miami"
+            }
+        ]
+    },
+    "2576d9559d116df1ea8d5b9787e45fc2": {
+        "voos": [
+            {
+                "cia": "Latam",
+                "milhas": 45000,
+                "taxas": 300.0,
+                "trecho": "GRU-JFK"
+            }
+        ]
+    },
+    "bddf3c22c69ef01e15a0026b014d7d4a": {
+        "voos": [
+            {
+                "cia": "LATAM Airlines",
+                "milhas": 0,
+                "taxas": 3011.11,
+                "trecho": "GRU - MIA",
+                "voo": "11952-2603232120--32115-2-14074-2603241905|14074-2603301955--32115-0-11952-2603310520"
+            },
+            {
+                "cia": "Avianca",
+                "milhas": 0,
+                "taxas": 2921.29,
+                "trecho": "GRU - MIA",
+                "voo": "11952-2603230240--32540-1-14074-2603232330|14074-2603301705--32540-1-11952-2603310525"
+            },
+            {
+                "cia": "Avianca",
+                "milhas": 0,
+                "taxas": 2009.66,
+                "trecho": "GRU - MIA",
+                "voo": "11952-2603230240--32540-2-14074-2603240015|14074-2603300245--32540-1-11952-2603310110"
+            },
+            {
+                "cia": "Avianca",
+                "milhas": 0,
+                "taxas": 2921.29,
+                "trecho": "GRU - MIA",
+                "voo": "11952-2603230735--32540-1-14074-2603240410|14074-2603301705--32540-1-11952-2603310525"
+            },
+            {
+                "cia": "LATAM Airlines",
+                "milhas": 0,
+                "taxas": 3326.22,
+                "trecho": "GRU - MIA",
+                "voo": "11952-2603231945--32115-1-14074-2603240710|14074-2603302145--32115-1-11952-2603311215"
+            },
+            {
+                "cia": "GOL Linhas Aéreas",
+                "milhas": 0,
+                "taxas": 3457.76,
+                "trecho": "GRU - MIA",
+                "voo": "G3-OUTBOUND-2303-INBOUND-3003"
+            }
+        ]
+    },
+    "37067471739a80441f3267f3caa689b4": {
+        "voos": [
+            {
+                "cia": "LATAM",
+                "milhas": 104948,
+                "taxas": 159.55,
+                "trecho": "GRU - MIA",
+                "voo": "LA8194 (10:15)"
+            },
+            {
+                "cia": "LATAM",
+                "milhas": 104948,
+                "taxas": 159.55,
+                "trecho": "GRU - MIA",
+                "voo": "LA8039 (19:45)"
+            },
+            {
+                "cia": "LATAM",
+                "milhas": 120328,
+                "taxas": 159.55,
+                "trecho": "GRU - MIA",
+                "voo": "LA2429 (16:30)"
+            },
+            {
+                "cia": "LATAM",
+                "milhas": 136530,
+                "taxas": 159.55,
+                "trecho": "GRU - MIA",
+                "voo": "LA8190 (22:55)"
+            }
+        ]
+    }
+}

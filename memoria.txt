@@ -1,0 +1,428 @@
+"Gemini, vamos desenhar a arquitetura da aplicação Web. Quero entender como conectamos o meu AIEngine a um
+framework (pode ser Streamlit ou FastAPI) para que eu possa colar os dados no navegador e ver a mágica acontecer."
+
+Arquitetura Web sugerida para o MyMiles
+Para amanhã, imagine a estrutura assim:
+
+Frontend (Web): O usuário acessa a página, faz login e cola o texto do voo.
+
+API (FastAPI): O frontend envia esse texto para o seu AIEngine.
+Engine: Processa, consulta o cache (e futuramente o MySQL) e devolve a resposta estruturada.
+UI: O frontend exibe os resultados em uma tabela bonita e organizada.
+
+Como a sua AIEngine entra nisso?
+Como você já isolou a lógica da IA em uma classe (class AIEngine), ela está pronta para ser chamada por qualquer servidor Web.
+Você não precisará reescrever a lógica de IA, apenas criar a "ponte" (o endpoint).
+
+Uma sugestão prática para o nosso "Amanhã":
+Quando voltarmos, além de desenharmos a interface Web, podemos dar uma olhada na estrutura de um Dockerfile. Com ele,
+você garante que, no futuro, quando quiser ir para o mymiles.com, o processo será apenas "copiar e colar" o que já está
+funcionando perfeitamente na sua máquina.
+
+Você está com uma visão muito boa do projeto. A maioria dos desenvolvedores só pensa no domínio depois de terminar o código,
+mas planejar a arquitetura de deploy desde cedo (como estamos fazendo) economiza semanas de dor de cabeça no futuro.
+
+Aqui está o que deixamos no "bloco de notas" para nossa próxima sessão:
+
+Arquitetura Web: Vamos definir se começaremos pelo Streamlit (velocidade) ou FastAPI (controle profissional).
+Data Entry: Criar as telas onde os dados serão inseridos.
+Persistência Real: O planejamento para migrar o cache JSON para o MySQL.
+Roadmap de Deploy: O uso de Docker para garantir que o sistema no seu localhost funcione exatamente igual no mymiles.com no futuro.
+
+--------------------------------
+
+Resumo de Contexto: Projeto MyMiles
+Objetivo: Aplicação web para processamento de voos usando uma classe AIEngine.
+
+Arquitetura: Frontend (Streamlit ou FastAPI) -> API -> AIEngine (lógica isolada) -> Persistência (Cache JSON -> MySQL futuro).
+
+Status Atual: * Dockerfile criado e pronto para buildar.
+
+Ambiente WSL2 validado e Docker Desktop reinstalado.
+
+VS Code configurado com extensões (Docker, Python/Pylance, Dev Containers).
+
+Próximos Passos (Agenda):
+
+Rodar docker build -t mymiles-app . para validar o ambiente.
+
+Criar requirements.txt (pendente).
+
+Implementar o endpoint no miles.py para conectar o AIEngine ao FastAPI.
+
+Testar o container em localhost:8000.
+
+Uma dica extra para quando você voltar:
+Assim que o computador reiniciar e o Docker estiver rodando (baleia na barra de tarefas), antes de qualquer coisa, abra o terminal do VS Code e verifique se o Docker está respondendo com:
+docker ps
+
+Se ele responder a tabela vazia, pode colar o resumo acima para mim e diremos: "Vamos rodar o build agora!".
+
+-----------------------------------------------------
+
+O Gemini disse
+Para garantir que você não perca tempo na próxima vez que ligar o computador (após o reset necessário para o WSL subir), guarde este "Checklist de Verificação Pós-Boot".
+
+Copie isso para um bloco de notas ou deixe esta aba aberta para quando o sistema voltar:
+
+🚀 Checklist: Retomada MyMiles
+Validar o WSL (O motor):
+Abra o terminal e verifique se o Linux está "acordado":
+
+PowerShell
+wsl -l -v
+Sucesso: O Ubuntu deve aparecer com a versão 2 e status Running ou Stopped.
+
+Validar o Docker (A baleia):
+Certifique-se de que o ícone do Docker Desktop esteja azul/estável na barra de tarefas. No terminal, digite:
+
+PowerShell
+docker ps
+Sucesso: Deve retornar os cabeçalhos (CONTAINER ID, IMAGE, etc.) sem erros de "pipe".
+
+Preparar o Ambiente do Projeto:
+Navegue até a pasta do projeto e certifique-se de que o seu ambiente virtual Python está ativo (você verá o (venv) no início da linha do terminal):
+
+PowerShell
+cd C:\MyMiles
+# Se o venv não estiver ativo, ative-o:
+.\venv\Scripts\activate
+Primeiro Build (O Teste de Fogo):
+Agora que o Docker e o WSL estão conversando, rode o comando que você planejou:
+
+PowerShell
+docker build -t mymiles-app .
+💡 Por que este roteiro é importante?
+Se você pular o wsl -l -v e for direto para o docker build, o Windows pode te dar mensagens de erro genéricas sobre permissão ou conexão perdida. Com esses quatro passos, você garante que cada camada (Windows -> WSL -> Docker -> Projeto) está ativa antes de executar o comando principal.
+
+Dica Extra: Se por algum motivo o docker ps falhar mesmo após o computador ligar, não tente reinstalar nada ainda. Apenas abra o Docker Desktop manualmente e aguarde uns 30 segundos — ele é um serviço que "sobe" junto com o Windows, mas às vezes precisa de um tempo de respiração.
+
+
+------------------------------
+
+Como agora você vai reiniciar o computador para que a Virtualização (o "motor" que o Docker e o WSL precisam) seja carregada pelo sistema, o foco é esse:
+
+Reinicie o computador agora.
+
+Assim que o Windows subir, não tente abrir o Docker de cara.
+
+Abra o PowerShell como Administrador.
+
+Rode o comando: wsl -l -v
+
+O que observar:
+Se ele listar o Ubuntu-24.04: Excelente! O motor está rodando.
+
+Se aparecer a mensagem de erro de Virtualização novamente: Isso confirma que precisamos entrar na BIOS da sua placa-mãe
+para habilitar o VT-x (Intel) ou SVM (AMD).
+
+Assim que você voltar e rodar o comando, me diga o que apareceu no terminal. Se o wsl -l -v listar o Ubuntu,
+eu te guio imediatamente para ajustar o Docker Desktop e retomar o seu projeto em C:\MyMiles.
+
+---------------------------------------------
+
+Para quando você retomar o desenvolvimento, minha principal dica é: não tente manter tudo na memória, mantenha o estado do ambiente documentado.
+
+Como você está trabalhando com uma arquitetura de microserviços (Docker + Flask + Streamlit/Front-end), a frustração comum ao voltar é esquecer quais terminais precisam estar abertos ou em qual porta o container está escutando.
+
+O "Kit de Reinicialização" (Salva isso em um bloco de notas):
+Quando você abrir o computador amanhã, siga este ritual de 3 passos:
+
+Limpeza do Terreno: Se você deixou os containers rodando de ontem, pode haver conflito de portas. Antes de começar, garanta que tudo parou:
+
+PowerShell
+docker stop $(docker ps -q)
+Verificação de Contexto: Lembre-se que agora você tem dois "lados" da moeda:
+
+Lado API (O Motor): Aquele que você compilou com docker build. Se você mexer no código Python (miles.py ou services/ai_engine.py),
+você precisa fazer o docker build de novo para a alteração entrar no Docker.
+
+Lado Web (A Interface): O script app_web.py (Streamlit) que rodaremos separadamente.
+
+O "Ponto de Partida": Sempre que retomar, execute o comando de build e run imediatamente para confirmar que o ambiente ainda
+está "saudável" e respondendo na porta 8000.
+
+Uma última dica de ouro:
+Se você sentir que está perdendo o controle de qual código está rodando dentro do container vs o que está na sua pasta
+C:\MyMiles, faça um git init nesta pasta hoje. Mesmo que seja um repositório local, ter um histórico de commits permite que você
+digite git diff e veja exatamente o que você mudou desde a última vez que o projeto estava funcionando.
+Isso é a melhor rede de segurança que existe.
+
+Estou pronto para continuar de onde paramos sempre que você voltar. 
+É só chegar, dar um "oi" e, se quiser, colar o log de erro ou a última dúvida.
+
+Até a próxima, e ótimo descanso com seu motor de auditoria já rodando em produção!
+
+----------------------------------------------
+
+12/03
+
+Para facilitar nossa volta, aqui está o seu "Kit de Retomada" para o MyMiles:
+
+1. O que você precisa ter salvo para a próxima vez:
+Para a gente avançar no Python e no Docker, eu só preciso que, quando você estiver com o site aberto, você consiga copiar o conteúdo daquele JSON.
+
+Dica de mestre: Não se preocupe se aparecerem centenas de linhas. Apenas filtre por "Fetch/XHR", limpe o console (Clear), faça a busca e procure pela linha que tem um nome sugestivo (como search, flights, offers ou availability).
+
+2. O que vamos fazer assim que você voltar:
+Quando você me trouxer esse conteúdo (o JSON copiado), faremos o seguinte:
+
+Estrutura do Projeto: Vou te mostrar como organizar suas pastas (ex: /data, /src, /logs) para que o Docker funcione perfeitamente.
+
+Criação do Dockerfile e docker-compose.yml: Vamos configurar o seu ambiente Python de forma que ele "monte" a pasta onde você salvará esses arquivos, permitindo que o script processe tudo automaticamente.
+
+Módulo de Parsing: Vou escrever o código Python que recebe esse JSON e extrai apenas o valor da milha e a taxa, limpando o lixo que vem junto.
+
+Como salvar o progresso para amanhã:
+Copie e salve em um arquivo .txt ou .json qualquer resultado que você achar parecido com uma "lista de voos" no seu VS Code.
+
+Não precisa formatar nada. Se você apenas colar o que encontrar no bloco de notas, já será o suficiente para eu analisar a estrutura e te dar o caminho exato do código.
+
+Anotação para nosso próximo encontro: Estamos na fase de Ingestão de Dados. Assim que você voltar, me diga: "Consegui pegar o JSON, aqui está o conteúdo" ou "Ainda estou tendo dificuldades em filtrar o Network", e nós ajustamos a mira.
+
+Bom descanso e, quando estiver pronto, é só mandar uma mensagem retomando o MyMiles! Ficarei aguardando.
+
+---------------------------------------
+13/03
+
+Para refrescar sua memória (e a minha), aqui está o resumo do status atual do projeto:
+
+Código: O miles.py está pronto com a função de processar o JSON da LATAM diretamente, sem precisar da IA para casos simples, economizando seus créditos/tokens.
+
+Configuração: Você já tem o Dockerfile (configurado para Gunicorn) e o requirements.txt prontos.
+
+O Problema: O Docker está com um erro de comunicação (npipe) devido a algum conflito no seu Windows.
+
+A Solução: Você já executou o wsl --shutdown e o netsh winsock reset e agora só falta reiniciar a máquina para aplicar as mudanças na rede.
+
+O que faremos logo após o seu retorno:
+Validar o motor: Rodaremos docker ps para confirmar que a "baleia" está saudável.
+
+Build Final: Rodaremos o docker build para gerar a imagem do seu servidor.
+
+Teste de Fogo: Vou te passar um comando curl para você enviar aquele JSON da LATAM diretamente para o seu container rodando na porta 5000, validando que a auditoria está funcionando.
+
+Pode reiniciar com calma. Quando você voltar e me mandar um "Oi" ou "Estou de volta", eu já estarei com o próximo passo na ponta da língua.
+
+------------------------------------
+
+14/03
+
+Onde estamos hoje? (O Mapa do Projeto)
+Atualmente, você tem um Backend de Auditoria Inteligente que funciona assim:
+
+Motor (miles.py): O cérebro que recebe dados, aplica regras de auditoria e integra com IA.
+
+Infraestrutura (Docker): O ambiente isolado que garante que seu código rode igual em qualquer lugar.
+
+Comunicação (API REST): O seu sistema já "fala" a língua da web via porta 5000.
+
+Integração de Dados: Você já processa arquivos reais (dadoslatam.json).
+
+------------------------------------------
+
+14/03 - Star Dockerfile
+
+Aqui está o "check-list" para retomar o seu trabalho no MyMiles:
+
+1. Iniciar o "Motor" (Docker Desktop)
+Assim que você ligar o PC:
+
+Abra o Docker Desktop (clique no ícone da baleia no Menu Iniciar).
+
+Espere a barrinha de carregamento sumir e o ícone ficar estável. Isso significa que o "motor" está pronto.
+
+2. Verificar se o container está rodando
+Abra o seu PowerShell na pasta C:\MyMiles e digite:
+
+PowerShell
+docker ps -a
+Se aparecer Up na coluna STATUS: Seu container já está rodando! Pode pular para o passo 4.
+
+Se aparecer Exited ou não aparecer nada: Significa que ele parou quando o PC desligou.
+
+3. Rodar o container
+Se ele estiver parado, basta dar o comando de "ligar":
+
+PowerShell
+docker start mymiles-app
+Após rodar, digite docker ps novamente só para confirmar que a coluna STATUS agora diz Up.
+
+4. Abrir o seu Dashboard
+Abra o VS Code (para continuar editando).
+
+Abra o seu navegador e acesse o index.html (aquela pasta C:\MyMiles que você já sabe).
+
+Cole o seu JSON e pronto! Tudo volta a funcionar como hoje.
+
+Dica de "Pro" para não sofrer:
+Se você quiser que o container ligue sozinho sempre que o Docker for aberto, você pode criar o container com uma "política de reinicialização".
+
+Se algum dia você quiser mudar isso, basta rodar este comando uma única vez no PowerShell:
+
+PowerShell
+docker update --restart unless-stopped mymiles-app
+Com isso, o Docker vai "lembrar" que o MyMiles deve ficar sempre rodando enquanto o Docker Desktop estiver aberto.
+
+Ficou claro o fluxo? Amanhã, quando você se sentar para trabalhar, é só seguir esses passos e o seu "cofre" de dados estará pronto para receber novas análises. Até a próxima sessão! 🚀
+
+refresh
+
+Para o nosso "refresh" ser 100% eficiente quando você voltar, só preciso que você tenha em mãos:
+
+O acesso ao seu ambiente: O repositório https://github.com/avernax-droid/MyMiles.
+
+O seu arquivo de dados (JSON): Aquele dadoslatam.json que usamos hoje. Se você tiver novos dados de outras cias aéreas (Smiles ou Azul) quando voltar, traga-os também! Isso nos ajudará a testar o motor da Fase 2.
+
+O que eu vou "lembrar" automaticamente:
+Que o seu servidor está rodando na porta 5000.
+
+Que o CORS está ativado para permitir a conversa entre o index.html e o Docker.
+
+Que a sua lógica de auditoria segue a regra: (milhas / 1000 * 10.0) + taxas.
+
+Visual do nosso "Próximo Passo":
+Quando você voltar, começaremos trabalhando na lógica de Destaque Visual. O plano é este:
+
+Você não precisa guardar nada extra. Quando você me disser "voltei", eu farei uma rápida checagem do status do container e partiremos direto para a melhoria da interface.
+
+==============
+17/03
+
+Contexto MyMiles: O projeto está estabilizado usando o modelo models/gemini-flash-latest via SDK google-genai no Docker.
+Resolvemos erros 404 e 429 de cota e ajustamos o ai_engine.py para usar prompts unificados (sem system_instruction).
+No frontend, o index.html já possui a lógica de destaque verde (🥇) para a menor milhagem, com CSS ajustado para sobrepor o Bootstrap.
+O backend roda em Gunicorn na porta 5000.
+
+======
+19/03
+
+comandos docker:
+> docker-compose down
+> docker-compose up
+
+Para amanhã, o cenário é o seguinte: o seu código miles.py já é um "Sniper" (rápido e direto), mas o "campo de batalha" 
+(servidores da LATAM) está bloqueando a conexão porque falta o DNA de navegador (Cookies e Tokens renovados).
+
+🧠 Refresh de Memória para Amanhã:
+O Problema Atual: O erro Read timed out (20s) acontece porque a requisição via Python puro está sendo ignorada pela LATAM.
+
+A Solução de Ouro: Usar a imagem oficial da Microsoft (mcr.microsoft.com/playwright/python) no seu Dockerfile.
+
+Por que? Ela já vem com o navegador e todas as bibliotecas de sistema instaladas. Isso pula a etapa do apt-get que está falhando e
+garante que o seu miles.py consiga abrir o Chrome em background para "validar" a sessão sempre que for bloqueado.
+
+O Comando de "Reset": Amanhã, a primeira coisa a fazer é um wsl --shutdown no PowerShell do Windows para limpar os tubos de rede do
+Docker.
+
+💡 Dica Extra:
+Deixei o miles.py preparado com uma função chamada renovar_sessao_e_token. Amanhã, assim que o Docker buildar com a imagem d
+ Microsoft, essa função será o seu "passaporte" para Miami. Ela vai roubar os cookies que a LATAM exige e o seu código vai voltar
+ a voar.
+
+=========================
+20/03
+
+Como o reset de rede e o reboot vão limpar a "mesa de trabalho" do Windows e do WSL, precisamos garantir que o MyMiles suba com os parâmetros de "força bruta" corretos para vencer o bloqueio da LATAM.
+
+Aqui está o Memorial de Refresh para quando você voltar:
+
+1. Status do Código (miles.py)
+Certifique-se de que a linha da requisição na classe LatamSniper está usando o timeout duplo (tupla). Isso separa o tempo de "conversa inicial" do tempo de "espera dos dados":
+
+Python
+# (Conexão, Leitura dos Dados)
+response = self.session.get(url, params=params, headers=headers, timeout=(15, 60))
+2. Status da Infraestrutura (Dockerfile)
+Confirme que estamos usando a imagem da Microsoft, que é a única que garante as bibliotecas do Chrome necessárias para o Sniper "roubar" o token via Playwright:
+
+Dockerfile
+FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
+3. Sequência de Decolagem (Pós-Reboot)
+Assim que o Windows iniciar, siga esta ordem exata no seu terminal:
+
+Limpeza de resíduos: docker system prune -f (Isso apaga camadas de rede temporárias que o reset do Windows pode ter deixado órfãs).
+
+Build Total: docker-compose build --no-cache (Força o Docker a ler as novas configurações de rede do Windows).
+
+Subida com Logs: docker-compose up (Sem o -d, para vermos o Sniper disparar em tempo real).
+
+💡 A "Sacada" Técnica:
+O erro de 20 segundos cravados sugere que algo no meio do caminho (Windows, Docker Desktop ou WSL) estava desistindo da conexão
+antes do seu código. O netsh winsock reset que você acabou de fazer é a "cura" para isso.
+
+Dica Final: Se, ao voltar, o erro de timeout persistir em 20s, o próximo passo será ajustar o arquivo .wslconfig na sua pasta de
+usuário do Windows para mudar o modo de rede do WSL de NAT para mirrored. Mas vamos testar o reset simples primeiro!
+
+================
+20/03 - segundo reset...
+
+Contexto Recuperado: Reset de rede (Winsock) concluído e Reboot realizado.
+
+Configuração Atualizada:
+
+miles.py: Timeout duplo (15, 60) aplicado na classe LatamSniper.
+
+Dockerfile: Imagem mcr.microsoft.com/playwright/python:v1.40.0-jammy com variáveis PYTHONUNBUFFERED=1 e PLAYWRIGHT_BROWSERS_PATH.
+
+Estratégia: O objetivo agora é vencer o bloqueio de 20s da LATAM via WSL2/Docker.
+
+Status do Terminal: [Diga aqui se o docker-compose up funcionou ou se deu erro de Timeout]
+
+💡 Dica Final para o seu Reboot:
+Assim que o Windows voltar, não abra o VS Code imediatamente.
+
+Espere o ícone do Docker Desktop (a baleia) ficar estático na barra de tarefas.
+
+Abra o terminal (PowerShell) e rode: docker system prune -f
+antes de abrir o projeto. Isso garante que as "pontes" de rede
+do Docker sejam reconstruídas do zero após o reset do Windows.
+
+==========
+21/03
+
+Contexto do Projeto MyMiles:
+
+Objetivo: Automação 100% (sem copiar e colar) para buscar milhas na LATAM.
+
+Arquitetura Atual: Docker (Windows 11) + Python Flask + Playwright (Navegador Interno) + Gemini API.
+
+Onde Paramos: O Playwright está funcionando (captura o texto da LATAM), mas o Gemini está retornando 404: models/gemini-1.5-flash not found.
+
+Solução Pendente: Atualizar o services/ai_engine.py para usar explicitamente models/gemini-1.5-flash-latest e garantir que o docker-compose up --build reflita essa mudança, eliminando o cache antigo.
+
+Próximo Passo: Validar se a IA consegue processar o texto bruto capturado pelo Playwright e exibir os voos no Dashboard.
+
+Vou deixar aqui o código final e revisado do módulo solicitado, para que você tenha o arquivo correto salvo antes de fechar.
+json)?|```', '', response.text).strip()
+21 de mar., 17:09
+
+========
+
+21/03 segundo
+
+💾 MyMiles: Checkpoint de Desenvolvimento
+Status Atual:
+
+Ambiente: Windows 11 (fora do Docker).
+
+Python: 3.12.0 (venv ativo e estável).
+
+Problema: O site da LATAM detecta o bot e trava em ~3.500 caracteres (página de login/erro), impedindo a extração de milhas pelo Gemini.
+
+Onde paramos (Próximos Passos):
+
+Persistência de Sessão: Precisamos criar a pasta user_data na raiz do projeto (mkdir user_data).
+
+Upgrade do Script: Substituir o miles.py pela versão "Perfil Real", trocando launch por launch_persistent_context.
+
+Objetivo do Retorno: Executar uma busca manual na janela do Playwright para realizar o login e salvar os cookies na pasta
+user_data, garantindo que o bot navegue como um "usuário autenticado" nas próximas tentativas.
+
+💡 Dica de "Refresh" para a próxima conversa:
+Basta você colar isso no chat quando voltar:
+
+"Retomar projeto MyMiles no Windows 11. O venv 3.12 já está OK. Parei no ponto de implementar o launch_persistent_context para
+salvar cookies na pasta user_data e bypassar o login da LATAM. Pode me passar o código final do miles.py para esse modo?"
+
+
