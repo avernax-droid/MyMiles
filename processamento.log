@@ -1,0 +1,8 @@
+2026-03-11 08:46:41,835 - INFO - ==================================================
+2026-03-11 08:46:41,836 - INFO - INÍCIO DE UMA NOVA SESSÃO DE TESTE
+2026-03-11 08:46:41,836 - INFO - ==================================================
+2026-03-11 08:46:42,806 - INFO - AIEngine inicializado com Cache e Listagem Dinâmica de Modelos.
+2026-03-11 08:46:43,177 - INFO - HTTP Request: GET https://generativelanguage.googleapis.com/v1beta/models "HTTP/1.1 200 OK"
+2026-03-11 08:46:43,199 - INFO - Resultado recuperado do cache local.
+2026-03-11 08:46:58,200 - INFO - Resultado recuperado do cache local.
+2026-03-11 08:47:13,203 - INFO - Resultado recuperado do cache local.
