@@ -724,3 +724,27 @@ Resolvemos erros 404 e 429 de cota e ajustamos o ai_engine.py para usar prompts 
 No frontend, o index.html já possui a lógica de destaque verde (🥇) para a menor milhagem, com CSS ajustado para sobrepor o Bootstrap.
 O backend roda em Gunicorn na porta 5000.
 >>>>>>> d10e5449e13c53935bbe0eba624404f25bc0ee3f
+
+=================
+23/03
+
+📝 Resumo para Reinício (Contexto do Projeto MyMiles)
+Estado Atual: O código foi restaurado via GitHub para o commit 6a445a7. O arquivo principal é miles.py e a pasta raiz é mymiles.
+
+O Problema: A estratégia de acessar a LATAM via URL direta com parâmetros está instável e gerando erro 404, indicando que o site mudou as rotas de busca de milhas.
+
+A Decisão: Abandonar a tentativa de "adivinhar" a URL de busca.
+
+O Novo Plano: Evoluir o miles.py para uma automação baseada em interface (UI-based). O script deve:
+
+Acessar a Home da LATAM.
+
+Interagir com os campos de texto (Origem/Destino) e Calendário.
+
+Clicar no botão de busca como um usuário real.
+
+Ambiente: Python 3.12, Playwright, WSL2/Ubuntu, rodando com a sessão persistente na pasta .auth.
+
+Dica extra: Se você quiser, antes de fechar o VS Code, dê um git add . e git commit -m "Checkpoint:
+Preparando mudança para busca via UI" (não precisa dar push se não quiser). Isso garante que suas tentativas de hoje
+fiquem registradas localmente.

@@ -1,12 +1,22 @@
-<<<<<<< HEAD
-.auth/
+# Ambiente Virtual e Cache
 venv/
-.env
 __pycache__/
 *.pyc
-user_data/
-=======
+
+# Configurações e Segredos
 .env
-venv
-__pycache__
->>>>>>> d10e5449e13c53935bbe0eba624404f25bc0ee3f
+.auth/
+user_data/
+
+# Arquivos Binários e Instaladores (Importante para evitar o erro de 100MB)
+*.deb
+*.exe
+*.msi
+*.zip
+*.tar.gz
+
+# Logs do Playwright/Navegador
+test-results/
+playwright-report/
+blob-report/
+memoria.txt

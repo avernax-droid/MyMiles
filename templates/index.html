@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>MyMiles - Auditoria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Estilos personalizados para os badges de Ida e Volta */
+        .badge-ida { background-color: #0d6efd; color: white; }
+        .badge-volta { background-color: #6c757d; color: white; }
+        
+        /* Oculta a área do loader por padrão */
+        #loaderArea { display: none; }
+        
+        /* Efeito de hover suave na tabela */
+        .table-hover tbody tr:hover { background-color: #f1f7ff; }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <div class="card p-4 shadow-sm mb-4">
+        <h2 class="text-primary mb-4">MyMiles Sniper ✈️</h2>
+        <div class="row g-2">
+            <div class="col-md-2"><input type="text" id="origem" class="form-control" placeholder="Origem (ex: GRU)"></div>
+            <div class="col-md-2"><input type="text" id="destino" class="form-control" placeholder="Destino (ex: MIA)"></div>
+            <div class="col-md-3"><input type="date" id="data_ida" class="form-control" title="Data de Ida"></div>
+            <div class="col-md-3"><input type="date" id="data_volta" class="form-control" title="Data de Volta (Opcional)"></div>
+            <div class="col-md-2"><button class="btn btn-primary w-100 fw-bold" onclick="executarBusca()" id="btnBusca">AUDITAR</button></div>
+        </div>
+    </div>
+
+    <div id="loaderArea" class="text-center p-5 card shadow-sm mb-4">
+        <div class="spinner-border text-primary mb-3"></div>
+        <h5>Sniper MyMiles em ação... 🎯</h5>
+        <p class="text-muted">Obtendo os melhores preços via API (aprox. 3-5 seg).</p>
+    </div>
+
+    <div id="resultadoArea" style="display:none;">
+        <div class="card shadow-sm p-3">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sentido</th><th>Voo</th><th>Trecho / Horário</th><th>Escalas</th><th class="text-end">Preço (R$)</th><th class="text-end">Taxas</th><th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaResultados">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function executarBusca() {
+        // Referências aos elementos da página
+        const loader = document.getElementById('loaderArea');
+        const resultadoArea = document.getElementById('resultadoArea');
+        const btn = document.getElementById('btnBusca');
+        const tabelaResultados = document.getElementById('tabelaResultados');
+        
+        // Coleta os parâmetros dos campos de input
+        const params = {
+            origem: document.getElementById('origem').value.toUpperCase().trim(),
+            destino: document.getElementById('destino').value.toUpperCase().trim(),
+            data_ida: document.getElementById('data_ida').value,
+            data_volta: document.getElementById('data_volta').value
+        };
+
+        // Validação simples de campos obrigatórios
+        if(!params.origem || !params.destino || !params.data_ida) {
+            return alert("Por favor, preencha Origem, Destino e Data de Ida.");
+        }
+
+        // Prepara a interface para a busca (mostra loader, esconde resultados)
+        loader.style.display = 'block';
+        resultadoArea.style.display = 'none';
+        btn.disabled = true;
+        tabelaResultados.innerHTML = ''; // Limpa a tabela anterior
+
+        try {
+            // Faz a chamada assíncrona para a rota '/buscar' do seu server.py
+            const res = await fetch('/buscar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(params) // Envia os parâmetros como JSON
+            });
+            
+            // Converte a resposta do servidor para JSON
+            const data = await res.json();
+            
+            // Se a busca foi um sucesso e há dados
+            if(data.status === "sucesso") {
+                // Loop para iterar sobre cada voo recebido
+                data.dados.forEach(v => {
+                    // Define a cor do badge com base no sentido do voo
+                    const badge = v.sentido === 'IDA' ? 'badge-ida' : 'badge-volta';
+                    
+                    // Formata a exibição das escalas
+                    const escalasTexto = v.escalas === 0 ? '<span class="text-success">Direto</span>' : `${v.escalas} conexão`;
+
+                    // Formatação do Preço e Taxas (R$)
+                    const precoFormatado = v.milhas.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+                    const taxasFormatadas = v.taxas.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+
+                    // Cria a linha da tabela (Tr)
+                    tabelaResultados.innerHTML += `
+                        <tr>
+                            <td><span class="badge ${badge}">${v.sentido}</span></td>
+                            <td><strong>${v.voo}</strong></td>
+                            <td>
+                                ${v.origem} ➔ ${v.destino}<br>
+                                <small class="text-muted">${v.saida} (${v.duracao})</small>
+                            </td>
+                            <td>${escalasTexto}</td>
+                            <td class="text-end fw-bold text-primary">${precoFormatado}</td>
+                            <td class="text-end text-muted">${taxasFormatadas}</td>
+                            <td class="text-center">
+                                <a href="${v.link}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">Ver Oferta</a>
+                            </td>
+                        </tr>`;
+                });
+                // Mostra a área de resultados
+                resultadoArea.style.display = 'block';
+            } else {
+                // Se a API não encontrou voos ou deu erro
+                alert("Atenção: " + (data.mensagem || "Erro desconhecido na busca."));
+            }
+        } catch(e) {
+            // Tratamento de erros de conexão com o servidor
+            console.error("Erro de rede:", e);
+            alert("Erro de conexão com o servidor MyMiles. Verifique se o backend está rodando.");
+        } finally {
+            // Em qualquer cenário, oculta o loader e reativa o botão
+            loader.style.display = 'none';
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
