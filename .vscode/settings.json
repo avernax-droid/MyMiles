@@ -1,4 +1,4 @@
 {
-    "python.defaultInterpreterPath": "C:\\MyMiles\\venv\\Scripts\\python.exe",
+    "python.defaultInterpreterPath": "/home/userverna/mymiles/venv/bin/python",
     "python.terminal.activateEnvInCurrentTerminal": true
 }

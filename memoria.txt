@@ -748,3 +748,40 @@ Ambiente: Python 3.12, Playwright, WSL2/Ubuntu, rodando com a sessão persistent
 Dica extra: Se você quiser, antes de fechar o VS Code, dê um git add . e git commit -m "Checkpoint:
 Preparando mudança para busca via UI" (não precisa dar push se não quiser). Isso garante que suas tentativas de hoje
 fiquem registradas localmente.
+
+========
+
+24/03
+
+📝 MyMiles Sniper: Briefing de Continuidade (25/03/2026)
+📍 Onde paramos:
+
+GitHub: Backup realizado com sucesso (Commit 24cc33d..main). O problema dos arquivos pesados (>100MB) foi resolvido com .gitignore e git reset.
+
+Interface: O front-end está consumindo a API, mas os dados estão "sujos".
+
+Engine: A lógica de extração está ativa, porém misturando Milhas com Reais e falhando na limpeza das strings de horário.
+
+🛠️ O que precisamos corrigir (O Plano de Amanhã):
+
+Diferenciação de Moeda: Ajustar a engine.py para detectar se o bestPrice é Milhas (ex: 7.243) ou Centavos de Real
+(ex: 29308 -> R$ 293,08). Atualmente, tudo está aparecendo com o prefixo "R$".
+
+Limpeza de Horários: O campo de horário no HTML está vindo com o texto "Ver Site" ou "Direto" grudado. Precisamos aplicar
+o .split('T') na Engine para isolar apenas o HH:MM.
+
+Coluna de Taxas: Verificar por que os valores estão chegando como R$ 0,00 (ajustar o mapeamento das chaves totalTaxes ou fees).
+
+Estética: Ajustar o index.html para que a tabela não quebre o layout com textos muito longos.
+
+💡 Dica de Ouro: > "Amanhã, a primeira coisa é atualizar a função processar_resultados na engine.py com o divisor /100 condicional
+e o tratamento de string ISO para o tempo."
+
+Status do Checkpoint:
+Ambiente: WSL2 / Windows 11
+
+Versão Python: 3.12.0
+
+Git: Limpo e sem arquivos > 100MB.
+
+Pendente: Calibração da lógica Preço vs Milhas na engine.py.
