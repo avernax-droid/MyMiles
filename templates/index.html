@@ -2,70 +2,47 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyMiles Sniper - Auditoria</title>
+    <title>MyMiles Sniper - V2 Intelligence</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .badge-ida { background-color: #0d6efd; color: white; }
-        .badge-volta { background-color: #6c757d; color: white; }
+        .badge-ida { background-color: #0d6efd; }
+        .badge-volta { background-color: #6c757d; }
+        .horario-tag { font-size: 0.85rem; font-weight: bold; background: #e9ecef; padding: 2px 6px; border-radius: 4px; }
         #loaderArea { display: none; }
-        .table-hover tbody tr:hover { background-color: #f1f7ff; }
-        
-        /* Prevenção de quebra de layout */
-        .table { table-layout: fixed; width: 100%; }
-        .table td { 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            vertical-align: middle;
-        }
-        .col-sentido { width: 80px; }
-        .col-voo { width: 120px; }
-        .col-trecho { width: 250px; }
-        .col-preco { width: 150px; }
-        
-        .horario-tag {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #333;
-            background: #e9ecef;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
     </style>
 </head>
 <body class="bg-light">
+
 <div class="container py-5">
     <div class="card p-4 shadow-sm mb-4 border-0">
-        <h2 class="text-primary mb-4 fw-bold">MyMiles Sniper ✈️</h2>
-        <div class="row g-2">
-            <div class="col-md-2"><input type="text" id="origem" class="form-control" placeholder="Origem (GRU)"></div>
-            <div class="col-md-2"><input type="text" id="destino" class="form-control" placeholder="Destino (MIA)"></div>
-            <div class="col-md-3"><input type="date" id="data_ida" class="form-control"></div>
-            <div class="col-md-3"><input type="date" id="data_volta" class="form-control"></div>
-            <div class="col-md-2"><button class="btn btn-primary w-100 fw-bold" onclick="executarBusca()" id="btnBusca">AUDITAR</button></div>
+        <h2 class="text-primary mb-4 fw-bold">MyMiles Sniper 🎯</h2>
+        <div class="row g-3">
+            <div class="col-md-2"><label class="small fw-bold">Origem</label><input type="text" id="origem" class="form-control" placeholder="GRU"></div>
+            <div class="col-md-2"><label class="small fw-bold">Destino</label><input type="text" id="destino" class="form-control" placeholder="MIA"></div>
+            <div class="col-md-2"><label class="small fw-bold">Ida</label><input type="date" id="data_ida" class="form-control"></div>
+            <div class="col-md-2"><label class="small fw-bold">Volta</label><input type="date" id="data_volta" class="form-control"></div>
+            <div class="col-md-2"><label class="small fw-bold">Custo Milheiro</label><input type="number" id="custo_milheiro" class="form-control" value="17.50" step="0.10"></div>
+            <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100 fw-bold" onclick="executarBusca()">AUDITAR</button></div>
         </div>
     </div>
 
     <div id="loaderArea" class="text-center p-5 card shadow-sm mb-4 border-0">
-        <div class="spinner-border text-primary mb-3" role="status"></div>
-        <h5>Sniper em ação... 🎯</h5>
-        <p class="text-muted small">Cruzando dados de milhas e taxas em tempo real.</p>
+        <div class="spinner-grow text-primary mb-3"></div>
+        <h5>Auditoria em curso...</h5>
     </div>
 
     <div id="resultadoArea" style="display:none;">
         <div class="card shadow-sm border-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-dark">
                         <tr>
-                            <th class="col-sentido">Sentido</th>
-                            <th class="col-voo">Voo</th>
-                            <th class="col-trecho">Trecho / Horário</th>
-                            <th>Escalas</th>
-                            <th class="text-end col-preco">Preço</th>
-                            <th class="text-end">Taxas</th>
-                            <th class="text-center" style="width: 80px;">Ação</th>
+                            <th style="width: 140px;">Veredito</th>
+                            <th>Voo / Escalas</th>
+                            <th>Data / Rota / Horário</th>
+                            <th class="text-end">Preço Final</th>
+                            <th class="text-end text-success">Teto em Milhas</th>
+                            <th class="text-center">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaResultados"></tbody>
@@ -79,23 +56,21 @@
     async function executarBusca() {
         const loader = document.getElementById('loaderArea');
         const resultadoArea = document.getElementById('resultadoArea');
-        const btn = document.getElementById('btnBusca');
         const tabelaResultados = document.getElementById('tabelaResultados');
-        
+        const custoMilheiro = parseFloat(document.getElementById('custo_milheiro').value) || 17.50;
+
         const params = {
             origem: document.getElementById('origem').value.toUpperCase().trim(),
             destino: document.getElementById('destino').value.toUpperCase().trim(),
             data_ida: document.getElementById('data_ida').value,
-            data_volta: document.getElementById('data_volta').value
+            data_volta: document.getElementById('data_volta').value,
+            custo_milheiro: custoMilheiro
         };
 
-        if(!params.origem || !params.destino || !params.data_ida) {
-            return alert("Preencha os campos obrigatórios.");
-        }
+        if(!params.origem || !params.destino || !params.data_ida) return alert("Preencha os campos.");
 
         loader.style.display = 'block';
         resultadoArea.style.display = 'none';
-        btn.disabled = true;
         tabelaResultados.innerHTML = ''; 
 
         try {
@@ -104,41 +79,39 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(params)
             });
-            
             const data = await res.json();
             
-            if(data.status === "sucesso" && data.dados.length > 0) {
+            if(data.status === "sucesso") {
                 data.dados.forEach(v => {
-                    const badge = v.sentido === 'IDA' ? 'badge-ida' : 'badge-volta';
-                    const escalasTexto = v.escalas === 0 ? '<span class="text-success small fw-bold">DIRETO</span>' : `<span class="small">${v.escalas} conex.</span>`;
+                    const badgeClass = v.sentido === 'IDA' ? 'bg-primary' : 'bg-secondary';
+                    const scoreHtml = v.status_sniper ? `<div class="${v.classe_cor} small fw-bold">${v.status_sniper}</div>` : "";
+                    
+                    // Cálculo do teto (Preço Total - R$410 taxas) / Custo Milheiro
+                    const precoNumerico = parseFloat(v.preco.replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0;
+                    let tetoMilhas = "---";
+                    if (precoNumerico > 0) {
+                        const limite = Math.floor((precoNumerico - 410) / (custoMilheiro / 1000));
+                        tetoMilhas = limite > 0 ? `${limite.toLocaleString('pt-BR')} pts` : "---";
+                    }
 
                     tabelaResultados.innerHTML += `
                         <tr>
-                            <td><span class="badge ${badge}">${v.sentido}</span></td>
-                            <td><span class="fw-bold text-dark">${v.voo}</span></td>
+                            <td><span class="badge ${badgeClass} mb-1">${v.sentido}</span>${scoreHtml}</td>
+                            <td><span class="fw-bold text-dark">${v.voo}</span><br><small class="text-muted">${v.escalas}</small></td>
                             <td>
-                                <div class="mb-1">${v.trecho}</div>
-                                <span class="horario-tag">${v.horario}</span>
-                                <small class="text-muted ms-1">${v.duracao}</small>
+                                <div class="fw-bold text-primary" style="font-size: 1.1rem;">${v.data}</div>
+                                <div class="small">${v.trecho}</div>
+                                <span class="horario-tag">${v.horario}</span> <small class="text-muted">${v.duracao}</small>
                             </td>
-                            <td>${escalasTexto}</td>
-                            <td class="text-end fw-bold text-primary">${v.preco}</td>
-                            <td class="text-end text-muted small">${v.taxas}</td>
-                            <td class="text-center">
-                                <a href="${v.link}" target="_blank" class="btn btn-sm btn-primary py-0 px-3">Ver</a>
-                            </td>
+                            <td class="text-end fw-bold text-dark fs-5">${v.preco}</td>
+                            <td class="text-end text-success fw-bold" style="font-size: 1.2rem; background-color: #f8fff9;">${tetoMilhas}</td>
+                            <td class="text-center"><a href="${v.link}" target="_blank" class="btn btn-sm btn-outline-dark">Ver no Site</a></td>
                         </tr>`;
                 });
                 resultadoArea.style.display = 'block';
-            } else {
-                alert(data.mensagem || "Nenhum voo encontrado.");
             }
-        } catch(e) {
-            alert("Erro na comunicação com o Sniper.");
-        } finally {
-            loader.style.display = 'none';
-            btn.disabled = false;
-        }
+        } catch(e) { alert("Erro de conexão."); }
+        finally { loader.style.display = 'none'; }
     }
 </script>
 </body>

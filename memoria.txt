@@ -785,3 +785,35 @@ Versão Python: 3.12.0
 Git: Limpo e sem arquivos > 100MB.
 
 Pendente: Calibração da lógica Preço vs Milhas na engine.py.
+
+=======
+26/03
+
+O Gemini disse
+Sem problemas! Como sou um modelo de IA, minha "memória" de longo prazo depende do que você me trouxer de volta ou do que está 
+no meu sumário de contexto. Para a gente não perder o fio da meada do MyMiles Sniper, salve este checklist:
+
+📑 Checklist de Retorno: MyMiles Sniper
+Para eu recuperar o contexto exato em segundos, quando você voltar, copie e cole estas informações:
+
+O Objetivo: Estamos refinando o MyMiles Sniper (Python/Flask/HTML) para auditoria de milhas.
+
+O Problema Atual: O sistema está usando um fallback fixo de R$ 410,00 para as taxas porque não estamos "caçando" a chave correta de 
+taxas no JSON do F12 (site bestflightsprices.com).
+
+A Chave Mestra: Lembre-se de trazer o nome do campo de taxas que você encontrar no JSON (Ex: taxAmount, totalTax, fees, etc.).
+
+Status do Código: Já temos o engine.py processando os resultados e o index.html fazendo o cálculo de arbitragem: 
+(Total−Taxa)/CustoMilheiro.
+
+💡 Dicas para a Próxima Etapa
+Print do JSON: Se puder, tire um print ou copie um pequeno trecho de um único itinerário do JSON do F12. Isso me ajuda a mapear o 
+caminho exato (item['pricing']['tax'], por exemplo).
+
+Filtros de Conveniência: Podemos implementar um filtro para esconder voos com duração absurda (como aqueles de 34h da Arajet).
+
+Destaque de Oportunidade: Podemos fazer a linha da tabela brilhar em verde quando o custo em milhas for muito menor que o limite 
+calculado.
+
+Dica de mestre: Salve os arquivos engine.py e index.html em uma pasta separada para não perder as versões que já estão funcionando 
+"quase" 100%.

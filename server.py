@@ -17,9 +17,13 @@ def buscar():
         data_ida = params.get('data_ida')
         data_volta = params.get('data_volta')
         
-        print(f"\n🚀 MyMiles Sniper iniciando busca: {origem} -> {destino}")
+        # Captura o custo do milheiro enviado pelo formulário (padrão 17.50 se vazio)
+        custo_milheiro = float(params.get('custo_milheiro', 17.50))
         
-        dados_voos = buscar_voos_completos(origem, destino, data_ida, data_volta)
+        print(f"\n🚀 MyMiles Sniper: {origem} -> {destino} (Custo Milheiro: R$ {custo_milheiro:.2f})")
+        
+        # Chama o motor de busca passando o custo personalizado
+        dados_voos = buscar_voos_completos(origem, destino, data_ida, data_volta, custo_milheiro)
         
         if dados_voos:
             return jsonify({"status": "sucesso", "dados": dados_voos})
@@ -32,5 +36,5 @@ def buscar():
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    print(f"\n--- MyMiles Sniper Online ---")
+    print(f"\n--- MyMiles Sniper Online (V2) ---")
     app.run(host='0.0.0.0', port=port, debug=True)
