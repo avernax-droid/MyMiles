@@ -11,7 +11,7 @@ def index():
 def buscar():
     try:
         params = request.json
-        print(f"🚀 Sniper Ativado: {params['origem']} -> {params['destino']} ({params['pax']} pax, {params['classe']})")
+        print(f"🚀 Sniper Ativado: {params['origem']} -> {params['destino']} | Pax: {params['pax']}")
 
         resultados = buscar_voos_completos(
             origem=params['origem'], 
@@ -24,13 +24,14 @@ def buscar():
         )
         
         if not resultados:
-            return jsonify({"status": "erro", "mensagem": "Nenhum voo encontrado."})
+            return jsonify({"status": "erro", "mensagem": "Nenhum voo encontrado para este trecho ou data."})
             
         return jsonify({"status": "sucesso", "dados": resultados})
 
     except Exception as e:
-        print(f"❌ Erro: {e}")
-        return jsonify({"status": "erro", "mensagem": str(e)})
+        print(f"❌ Erro no Servidor: {e}")
+        return jsonify({"status": "erro", "mensagem": "Erro interno no processamento."})
 
 if __name__ == '__main__':
+    # O host 0.0.0.0 permite que o ngrok redirecione para cá
     app.run(debug=True, host='0.0.0.0', port=5000)

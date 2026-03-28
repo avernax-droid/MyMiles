@@ -850,3 +850,19 @@ Deixo aqui o link direto para você gerar o token assim que voltar:
 GitHub - Personal Access Tokens (Classic)
 
 Dica: Ao gerar, marque a primeira caixinha que diz repo.
+
+=======
+28/03
+
+📂 Estrutura de Arquivos (Checkmate)
+server.py: O servidor Flask. É o arquivo que você executa (python server.py) para disponibilizar a interface e receber as 
+rotas / e /buscar.
+
+engine.py: O Módulo Principal. Onde mora a inteligência, o processamento dos dados do scraper e o cálculo da arbitragem de milhas.
+
+scraper.py: O operário. Entra nos sites usando Playwright para capturar os preços em tempo real.
+
+templates/index.html: O Dashboard. Agora com a lista local de aeroportos (v2.3) e sem a coluna "Veredito".
+
+Nota Final para o Futuro: "O projeto está redondo no Git. O server.py chama o engine.py, que por sua vez usa o scraper.py. 
+O autocomplete local no index.html resolveu o problema de Manaus e Buenos Aires."

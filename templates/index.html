@@ -2,7 +2,8 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>MyMiles Sniper - V2.3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyMiles Sniper - V2.5</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/css/autoComplete.02.min.css">
     <style>
@@ -16,13 +17,14 @@
         }
         .autoComplete_wrapper > ul { z-index: 9999 !important; border: 1px solid #ddd !important; }
         .table-v2 td { vertical-align: middle; padding: 15px 10px; border-bottom: 1px solid #eee; }
+        .status-badge { font-size: 0.75rem; font-weight: bold; padding: 3px 8px; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-light">
 
 <div class="container-fluid px-4 py-5">
     <div class="card p-4 shadow-sm mb-4 border-0">
-        <h2 class="text-primary mb-4 fw-bold">MyMiles Sniper 🎯</h2>
+        <h2 class="text-primary mb-4 fw-bold">MyMiles Sniper 🎯 <small class="text-muted" style="font-size: 0.4em;">V2.5</small></h2>
         <div class="row g-2">
             <div class="col-md-2">
                 <label class="small fw-bold">Origem</label>
@@ -30,7 +32,7 @@
             </div>
             <div class="col-md-2">
                 <label class="small fw-bold">Destino</label>
-                <input id="destino" type="search" autocomplete="off" placeholder="Ex: Buenos Aires" class="form-control">
+                <input id="destino" type="search" autocomplete="off" placeholder="Ex: Roma ou EZE" class="form-control">
             </div>
             <div class="col-md-1">
                 <label class="small fw-bold">Ida (GMT)</label>
@@ -88,7 +90,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/autoComplete.min.js"></script>
 <script>
-    // BASE DE DADOS LOCAL (Inviolável e Instantânea)
+    // LISTA AMPLIADA (Incluindo Roma, Milão e outros)
     const aeroportos = [
         { name: "São Paulo - Guarulhos", code: "GRU" },
         { name: "São Paulo - Congonhas", code: "CGH" },
@@ -96,31 +98,25 @@
         { name: "Rio de Janeiro - Galeão", code: "GIG" },
         { name: "Rio de Janeiro - Santos Dumont", code: "SDU" },
         { name: "Manaus", code: "MAO" },
+        { name: "Brasília", code: "BSB" },
         { name: "Buenos Aires - Ezeiza", code: "EZE" },
         { name: "Buenos Aires - Aeroparque", code: "AEP" },
-        { name: "Brasília", code: "BSB" },
-        { name: "Fortaleza", code: "FOR" },
-        { name: "Salvador", code: "SSA" },
-        { name: "Recife", code: "REC" },
-        { name: "Porto Alegre", code: "POA" },
-        { name: "Curitiba", code: "CWB" },
-        { name: "Belém", code: "BEL" },
-        { name: "Florianópolis", code: "FLN" },
+        { name: "Roma - Fiumicino", code: "FCO" },
+        { name: "Milão - Malpensa", code: "MXP" },
+        { name: "Veneza - Marco Polo", code: "VCE" },
         { name: "Miami", code: "MIA" },
         { name: "Orlando", code: "MCO" },
         { name: "Lisboa", code: "LIS" },
         { name: "Madrid", code: "MAD" },
         { name: "Paris - CDG", code: "CDG" },
-        { name: "Nova York - JFK", code: "JFK" }
+        { name: "Nova York - JFK", code: "JFK" },
+        { name: "Londres - Heathrow", code: "LHR" }
     ];
 
     const setupAutocomplete = (id) => {
         new autoComplete({
             selector: `#${id}`,
-            data: {
-                src: aeroportos,
-                keys: ["name", "code"]
-            },
+            data: { src: aeroportos, keys: ["name", "code"] },
             resultItem: {
                 element: (item, data) => {
                     item.innerHTML = `<div style="display:flex; justify-content:space-between;">
@@ -133,7 +129,8 @@
                 input: {
                     selection: (event) => {
                         const sel = event.detail.selection.value;
-                        document.getElementById(id).value = sel.code;
+                        // Correção: Mantém o nome amigável no campo
+                        document.getElementById(id).value = `${sel.name} - ${sel.code}`;
                     }
                 }
             }
@@ -144,11 +141,15 @@
     setupAutocomplete("destino");
 
     async function executarBusca() {
-        const ori = document.getElementById('origem').value.trim().toUpperCase();
-        const des = document.getElementById('destino').value.trim().toUpperCase();
+        let oriInput = document.getElementById('origem').value.trim();
+        let desInput = document.getElementById('destino').value.trim();
 
-        if (ori.length < 3 || des.length < 3) {
-            alert("Preencha os códigos IATA (Ex: GRU, MAO, EZE)");
+        // Lógica de extração infalível do Código IATA (últimas 3 letras)
+        let ori = oriInput.substring(oriInput.length - 3).toUpperCase();
+        let des = desInput.substring(desInput.length - 3).toUpperCase();
+
+        if (ori.length !== 3 || des.length !== 3) {
+            alert("Por favor, selecione um aeroporto da lista (Ex: Roma - FCO)");
             return;
         }
 
@@ -160,6 +161,8 @@
             pax: parseInt(document.getElementById('passageiros').value),
             classe: document.getElementById('classe').value
         };
+
+        if (!params.data_ida) { alert("Informe a data de ida."); return; }
 
         document.getElementById('loaderArea').style.display = 'block';
         document.getElementById('resultadoArea').style.display = 'none';
@@ -178,22 +181,38 @@
                 data.dados.forEach((ida, i) => {
                     if (ida.sentido === "IDA") {
                         const volta = (i + 1 < data.dados.length && data.dados[i+1].sentido === "VOLTA") ? data.dados[i+1] : null;
+                        
+                        // Resgate do Cálculo Sniper que estava no seu original
                         const precoTotalBRL = parseFloat(ida.preco.replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0;
                         const teto = Math.floor(((precoTotalBRL / params.pax) - 410) / (params.custo_milheiro / 1000));
 
                         tabela.innerHTML += `
                             <tr>
-                                <td><b>${ida.voo}</b> <span class="horario-tag">${ida.horario}</span><br><small>${ida.data}</small></td>
-                                <td>${volta ? `<b>${volta.voo}</b> <span class="horario-tag">${volta.horario}</span><br><small>${volta.data}</small>` : '-'}</td>
-                                <td class="text-end fw-bold">${ida.preco}</td>
-                                <td class="text-end text-success fw-bold">${teto > 0 ? teto.toLocaleString('pt-BR') + ' pts' : '---'}</td>
-                                <td class="text-center"><a href="${ida.link}" target="_blank" class="btn btn-sm btn-dark">VER</a></td>
+                                <td>
+                                    <span class="status-badge bg-primary text-white">IDA</span><br>
+                                    <b>${ida.voo}</b> <span class="horario-tag">${ida.horario}</span><br>
+                                    <small class="text-muted">${ida.data}</small>
+                                </td>
+                                <td>
+                                    ${volta ? `
+                                        <span class="status-badge bg-secondary text-white">VOLTA</span><br>
+                                        <b>${volta.voo}</b> <span class="horario-tag">${volta.horario}</span><br>
+                                        <small class="text-muted">${volta.data}</small>
+                                    ` : '<span class="text-muted">Somente Ida</span>'}
+                                </td>
+                                <td class="text-end fw-bold" style="font-size: 1.1rem;">${ida.preco}</td>
+                                <td class="text-end text-success fw-bold" style="font-size: 1.1rem;">
+                                    ${teto > 0 ? teto.toLocaleString('pt-BR') + ' pts' : '---'}
+                                </td>
+                                <td class="text-center">
+                                    <a href="${ida.link}" target="_blank" class="btn btn-dark fw-bold">VER</a>
+                                </td>
                             </tr>`;
                     }
                 });
                 document.getElementById('resultadoArea').style.display = 'block';
             } else { alert(data.mensagem); }
-        } catch(e) { alert("Erro no servidor."); }
+        } catch(e) { alert("Erro de conexão com o servidor Ubuntu."); }
         finally { document.getElementById('loaderArea').style.display = 'none'; }
     }
 </script>
