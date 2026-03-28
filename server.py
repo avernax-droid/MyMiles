@@ -10,28 +10,27 @@ def index():
 @app.route('/buscar', methods=['POST'])
 def buscar():
     try:
-        params = request.json
-        print(f"🚀 Sniper Ativado: {params['origem']} -> {params['destino']} | Pax: {params['pax']}")
-
-        resultados = buscar_voos_completos(
-            origem=params['origem'], 
-            destino=params['destino'], 
-            data_ida=params['data_ida'], 
-            data_volta=params.get('data_volta'),
-            custo_milheiro=params['custo_milheiro'],
-            pax=params['pax'],
-            classe=params.get('classe', 'economy')
+        data = request.json
+        # Adicionamos a captura da 'classe' vinda do JSON (index.html)
+        res = buscar_voos_completos(
+            origem=data['origem'].upper(),
+            destino=data['destino'].upper(),
+            data_ida=data['data_ida'],
+            data_volta=data.get('data_volta'),
+            custo_milheiro=float(data['custo_milheiro']),
+            pax=int(data['pax']),
+            classe=data.get('classe', 'ECONOMY')  # <--- O argumento faltante aqui!
         )
         
-        if not resultados:
-            return jsonify({"status": "erro", "mensagem": "Nenhum voo encontrado para este trecho ou data."})
+        if not res:
+            return jsonify({"status": "erro", "mensagem": "Nenhum voo encontrado."})
             
-        return jsonify({"status": "sucesso", "dados": resultados})
-
+        return jsonify({"status": "sucesso", "dados": res})
+        
     except Exception as e:
-        print(f"❌ Erro no Servidor: {e}")
-        return jsonify({"status": "erro", "mensagem": "Erro interno no processamento."})
+        # Imprime o erro no terminal para facilitar o debug se algo falhar
+        print(f"❌ Erro no processamento: {e}")
+        return jsonify({"status": "erro", "mensagem": str(e)})
 
 if __name__ == '__main__':
-    # O host 0.0.0.0 permite que o ngrok redirecione para cá
     app.run(debug=True, host='0.0.0.0', port=5000)

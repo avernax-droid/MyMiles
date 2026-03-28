@@ -2,88 +2,89 @@ import requests
 import time
 from scraper import obter_token_sessao 
 
-def obter_cotacoes_atuais():
+HEADERS_AUDITORIA = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Origin': 'https://bestflightsprices.com',
+    'Referer': 'https://bestflightsprices.com/',
+    'Accept': 'application/json, text/plain, */*'
+}
+
+def obter_cotacoes():
     try:
-        url = "https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL,GBP-BRL"
+        url = "https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL"
         res = requests.get(url, timeout=5).json()
         return {'USD': float(res['USDBRL']['bid']), 'EUR': float(res['EURBRL']['bid']), 'BRL': 1.0}
     except:
-        return {'USD': 5.25, 'EUR': 5.60, 'BRL': 1.0}
+        return {'USD': 5.30, 'EUR': 5.70, 'BRL': 1.0}
 
-def processar_resultados(itinerarios, custo_milheiro=17.50, pax=1):
-    taxas = obter_cotacoes_atuais()
+def processar_dados(itinerarios, custo_milheiro, pax):
+    taxas = obter_cotacoes()
     resultados = []
     
-    # Filtra itinerários válidos
-    itinerarios_validos = [it for it in itinerarios if it.get('bestPrice')]
-    # Ordena pelo melhor preço
-    itins_ordenados = sorted(itinerarios_validos, key=lambda x: x.get('bestPrice', 999999))
+    itins = [i for i in itinerarios if i.get('bestPrice')]
+    itins = sorted(itins, key=lambda x: x.get('bestPrice', 999999))
 
-    for item in itins_ordenados:
+    for item in itins:
         try:
             moeda = item.get('currencyCode', 'USD')
-            # Preço vem em formato inteiro (ex: 500000 para 500.00)
-            preco_raw = float(item.get('bestPrice')) / 1000
-            total_brl = preco_raw * taxas.get(moeda, taxas.get('USD', 5.25))
+            # O bestPrice da API costuma ser o total do itinerário
+            valor_raw = float(item.get('bestPrice')) / 1000
+            total_brl = valor_raw * taxas.get(moeda, taxas.get('USD', 5.30))
             
-            # Formatação R$ para exibição
-            preco_str = f"R$ {total_brl:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-            
-            # Cálculo Sniper por pessoa
+            # NORMALIZAÇÃO: Dividimos pelo número de passageiros para auditoria unitária
             preco_por_pessoa = total_brl / pax
-            # Arbitragem: Preço pagante vs Custo de emissão (considerando taxa média de R$ 410)
-            limite_milhas = int((preco_por_pessoa - 410) / (custo_milheiro / 1000))
+            preco_formatado = f"R$ {preco_por_pessoa:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
             
-            status, cor = "⚠️ CILADA", "text-warning"
-            if limite_milhas > 90000: status, cor = "🔥 OPORTUNIDADE", "text-danger"
-            elif limite_milhas > 45000: status, cor = "✅ JUSTO", "text-success"
-
-            def extrair_trecho(flight, sentido):
+            def formatar_voo(flight, sentido):
+                if not flight: return None
                 dt = flight.get('departureDateTime', {})
+                
+                # Correção de Escalas (Evita o -1)
+                segmentos = flight.get('segments', [])
+                n_seg = len(segmentos)
+                txt_escalas = "Direto" if n_seg <= 1 else f"{n_seg - 1} Escala(s)"
+                
+                classes = {"ECONOMY": "Econômica", "BUSINESS": "Executiva", "FIRST": "Primeira"}
+                classe_slug = flight.get('cabinClass', 'ECONOMY')
+                
                 return {
                     "sentido": sentido,
                     "voo": flight.get('carrierName', '---'),
-                    "trecho": f"{flight.get('departureAirport')} ➔ {flight.get('arrivalAirport')}",
-                    "data": f"{dt.get('day', 0):02d}/{dt.get('month', 0):02d}/{dt.get('year', 0)} (GMT)",
+                    "data": f"{dt.get('day', 0):02d}/{dt.get('month', 0):02d}/{dt.get('year')}",
                     "horario": f"{dt.get('hour', 0):02d}:{dt.get('minute', 0):02d}",
-                    "preco": preco_str,
-                    "status_sniper": status,
-                    "classe_cor": cor,
+                    "classe": classes.get(classe_slug, classe_slug),
+                    "escalas": txt_escalas,
+                    "preco": preco_formatado,
                     "link": item.get('bookingLink')
                 }
 
             if item.get('outboundFlight'): 
-                resultados.append(extrair_trecho(item['outboundFlight'], "IDA"))
+                resultados.append(formatar_voo(item['outboundFlight'], "IDA"))
             if item.get('inboundFlight'): 
-                resultados.append(extrair_trecho(item['inboundFlight'], "VOLTA"))
-        except Exception as e:
-            print(f"DEBUG: Erro ao processar itinerário: {e}")
+                resultados.append(formatar_voo(item['inboundFlight'], "VOLTA"))
+        except: 
             continue
     return resultados
 
-def buscar_voos_completos(origem, destino, data_ida, data_volta=None, custo_milheiro=17.50, pax=1, classe='economy'):
-    token = obter_token_sessao(origem, destino, data_ida, data_volta)
-    if not token: 
-        print("❌ [ENGINE] Falha ao obter Token de Sessão.")
-        return []
+def buscar_voos_completos(origem, destino, data_ida, data_volta, custo_milheiro, pax, classe):
+    token = obter_token_sessao(origem, destino, data_ida, data_volta, classe)
+    if not token: return []
     
-    url = f"https://sky-api-778236310566.us-central1.run.app/search/poll/{token}"
-    print(f"📡 [ENGINE] Consultando API com Token: {token[:15]}...")
+    url_poll = f"https://sky-api-778236310566.us-central1.run.app/search/poll/{token}"
     
-    for tentativa in range(15):
+    for i in range(20):
         try:
-            res = requests.get(url, timeout=15)
-            if res.status_code == 200:
-                dados = res.json()
-                # A API pode retornar o dicionário direto ou uma lista
-                itins = dados.get('itineraries', []) if isinstance(dados, dict) else dados
-                if itins: 
-                    print(f"✅ [ENGINE] {len(itins)} itinerários encontrados!")
-                    return processar_resultados(itins, custo_milheiro, pax)
-            
-            print(f"⏳ [ENGINE] Aguardando resultados da API... ({tentativa+1}/15)")
-        except Exception as e: 
-            print(f"⚠️ [ENGINE] Erro na consulta: {e}")
-        
-        time.sleep(4)
+            response = requests.get(url_poll, headers=HEADERS_AUDITORIA, timeout=15)
+            if response.status_code == 200:
+                dados = response.json()
+                itins = []
+                if isinstance(dados, list): itins = dados
+                elif isinstance(dados, dict): itins = dados.get('itineraries', [])
+                
+                if itins and len(itins) > 0:
+                    return processar_dados(itins, custo_milheiro, pax)
+            print(f"⏳ [ENGINE] Sincronizando tarifas ({classe})... ({i+1}/20)")
+        except: 
+            pass
+        time.sleep(3)
     return []

@@ -866,3 +866,39 @@ templates/index.html: O Dashboard. Agora com a lista local de aeroportos (v2.3) 
 
 Nota Final para o Futuro: "O projeto está redondo no Git. O server.py chama o engine.py, que por sua vez usa o scraper.py. 
 O autocomplete local no index.html resolveu o problema de Manaus e Buenos Aires."
+
+=======
+
+28/03
+
+MyMiles Sniper - Status Check (Refresh de Memória)
+1. Situação Atual do Projeto (V2.5)
+Contexto: Aplicação em Python/Flask para auditoria de milhas comparando com tarifas pagantes em tempo real.
+
+Ambiente: Desktop Windows 11 / Ubuntu (WSL) userverna@TonMix.
+
+Fluxo: O server.py chama o engine.py, que usa o scraper.py para capturar tokens e consultar uma API de parceiros (Air Europa, Azul, etc).
+
+2. O que já está Funcionando ✅
+Múltiplas Classes: O sistema agora envia e processa corretamente ECONOMY, BUSINESS e FIRST.
+
+Comunicação Frontend/Backend: O JSON de busca está completo, incluindo o novo campo classe.
+
+Cálculo de Teto Sniper: A fórmula no index.html já está ajustada para: (Preço Unitário - 410 taxas) / (Custo Milheiro / 1000).
+
+Interface: V2.5 com Bootstrap, AutoComplete de aeroportos e tabela de resultados otimizada.
+
+3. Pendências para o Retorno 🛠️
+Correção de Escalas (Bug do "Direto"): No último teste com a Air Europa, o sistema marcou "Direto" enquanto havia paradas.
+
+Ação: Aplicar a nova lógica no engine.py que verifica tanto o campo stops quanto a lista de segments.
+
+Sincronização de Preço Unitário: Garantir que o engine.py sempre divida o total_brl pelo número de passageiros (pax) antes 
+de enviar para o frontend, mantendo a paridade com sites de busca (ex: MyTrip/Gotogate).
+
+4. Último Resultado de Auditoria (Referência)
+Trecho: GRU ✈️ FCO (Ida: 29/03 | Volta: 02/04).
+
+Preço MyMiles: R$ 14.117,75 (Unitário).
+
+Teto Calculado: 783.299 pts (Milheiro a R$ 17,50).
