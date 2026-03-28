@@ -2,46 +2,80 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>MyMiles Sniper - V2 Intelligence</title>
+    <title>MyMiles Sniper - V2.3</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/css/autoComplete.02.min.css">
     <style>
-        .badge-ida { background-color: #0d6efd; }
-        .badge-volta { background-color: #6c757d; }
-        .horario-tag { font-size: 0.85rem; font-weight: bold; background: #e9ecef; padding: 2px 6px; border-radius: 4px; }
+        .horario-tag { font-size: 0.8rem; font-weight: bold; background: #f1f3f5; padding: 2px 5px; border-radius: 4px; border: 1px solid #dee2e6; }
         #loaderArea { display: none; }
+        .autoComplete_wrapper { width: 100% !important; }
+        .autoComplete_wrapper > input { 
+            width: 100% !important; height: 38px; 
+            border: 1px solid #dee2e6 !important; border-radius: 0.375rem !important; 
+            padding: 10px !important;
+        }
+        .autoComplete_wrapper > ul { z-index: 9999 !important; border: 1px solid #ddd !important; }
+        .table-v2 td { vertical-align: middle; padding: 15px 10px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body class="bg-light">
 
-<div class="container py-5">
+<div class="container-fluid px-4 py-5">
     <div class="card p-4 shadow-sm mb-4 border-0">
         <h2 class="text-primary mb-4 fw-bold">MyMiles Sniper 🎯</h2>
-        <div class="row g-3">
-            <div class="col-md-2"><label class="small fw-bold">Origem</label><input type="text" id="origem" class="form-control" placeholder="GRU"></div>
-            <div class="col-md-2"><label class="small fw-bold">Destino</label><input type="text" id="destino" class="form-control" placeholder="MIA"></div>
-            <div class="col-md-2"><label class="small fw-bold">Ida</label><input type="date" id="data_ida" class="form-control"></div>
-            <div class="col-md-2"><label class="small fw-bold">Volta</label><input type="date" id="data_volta" class="form-control"></div>
-            <div class="col-md-2"><label class="small fw-bold">Custo Milheiro</label><input type="number" id="custo_milheiro" class="form-control" value="17.50" step="0.10"></div>
-            <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100 fw-bold" onclick="executarBusca()">AUDITAR</button></div>
+        <div class="row g-2">
+            <div class="col-md-2">
+                <label class="small fw-bold">Origem</label>
+                <input id="origem" type="search" autocomplete="off" placeholder="Ex: Manaus ou MAO" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="small fw-bold">Destino</label>
+                <input id="destino" type="search" autocomplete="off" placeholder="Ex: Buenos Aires" class="form-control">
+            </div>
+            <div class="col-md-1">
+                <label class="small fw-bold">Ida (GMT)</label>
+                <input type="date" id="data_ida" class="form-control">
+            </div>
+            <div class="col-md-1">
+                <label class="small fw-bold">Volta (GMT)</label>
+                <input type="date" id="data_volta" class="form-control">
+            </div>
+            <div class="col-md-1">
+                <label class="small fw-bold">Classe</label>
+                <select id="classe" class="form-select">
+                    <option value="economy" selected>Econômica</option>
+                    <option value="business">Executiva</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="small fw-bold">Passageiros</label>
+                <input type="number" id="passageiros" class="form-control" value="1" min="1">
+            </div>
+            <div class="col-md-2">
+                <label class="small fw-bold">Custo Milheiro (R$)</label>
+                <input type="number" id="custo_milheiro" class="form-control" value="17.50" step="0.50">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary w-100 fw-bold" onclick="executarBusca()">BUSCAR</button>
+            </div>
         </div>
     </div>
 
-    <div id="loaderArea" class="text-center p-5 card shadow-sm mb-4 border-0">
-        <div class="spinner-grow text-primary mb-3"></div>
-        <h5>Auditoria em curso...</h5>
+    <div id="loaderArea" class="text-center p-5">
+        <div class="spinner-border text-primary"></div>
+        <h5 class="mt-3">Auditando tarifas e calculando arbitragem...</h5>
     </div>
 
     <div id="resultadoArea" style="display:none;">
         <div class="card shadow-sm border-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 table-v2">
                     <thead class="table-dark">
                         <tr>
-                            <th style="width: 140px;">Veredito</th>
-                            <th>Voo / Escalas</th>
-                            <th>Data / Rota / Horário</th>
-                            <th class="text-end">Preço Final</th>
-                            <th class="text-end text-success">Teto em Milhas</th>
+                            <th>Trecho Ida</th>
+                            <th>Trecho Volta</th>
+                            <th class="text-end">Preço Total</th>
+                            <th class="text-end text-success">Teto (Pontos/Pessoa)</th>
                             <th class="text-center">Ação</th>
                         </tr>
                     </thead>
@@ -52,26 +86,83 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/autoComplete.min.js"></script>
 <script>
+    // BASE DE DADOS LOCAL (Inviolável e Instantânea)
+    const aeroportos = [
+        { name: "São Paulo - Guarulhos", code: "GRU" },
+        { name: "São Paulo - Congonhas", code: "CGH" },
+        { name: "Campinas - Viracopos", code: "VCP" },
+        { name: "Rio de Janeiro - Galeão", code: "GIG" },
+        { name: "Rio de Janeiro - Santos Dumont", code: "SDU" },
+        { name: "Manaus", code: "MAO" },
+        { name: "Buenos Aires - Ezeiza", code: "EZE" },
+        { name: "Buenos Aires - Aeroparque", code: "AEP" },
+        { name: "Brasília", code: "BSB" },
+        { name: "Fortaleza", code: "FOR" },
+        { name: "Salvador", code: "SSA" },
+        { name: "Recife", code: "REC" },
+        { name: "Porto Alegre", code: "POA" },
+        { name: "Curitiba", code: "CWB" },
+        { name: "Belém", code: "BEL" },
+        { name: "Florianópolis", code: "FLN" },
+        { name: "Miami", code: "MIA" },
+        { name: "Orlando", code: "MCO" },
+        { name: "Lisboa", code: "LIS" },
+        { name: "Madrid", code: "MAD" },
+        { name: "Paris - CDG", code: "CDG" },
+        { name: "Nova York - JFK", code: "JFK" }
+    ];
+
+    const setupAutocomplete = (id) => {
+        new autoComplete({
+            selector: `#${id}`,
+            data: {
+                src: aeroportos,
+                keys: ["name", "code"]
+            },
+            resultItem: {
+                element: (item, data) => {
+                    item.innerHTML = `<div style="display:flex; justify-content:space-between;">
+                        <span>${data.value.name}</span>
+                        <span style="font-weight:bold; color:#0d6efd;">${data.value.code}</span>
+                    </div>`;
+                }
+            },
+            events: {
+                input: {
+                    selection: (event) => {
+                        const sel = event.detail.selection.value;
+                        document.getElementById(id).value = sel.code;
+                    }
+                }
+            }
+        });
+    };
+
+    setupAutocomplete("origem");
+    setupAutocomplete("destino");
+
     async function executarBusca() {
-        const loader = document.getElementById('loaderArea');
-        const resultadoArea = document.getElementById('resultadoArea');
-        const tabelaResultados = document.getElementById('tabelaResultados');
-        const custoMilheiro = parseFloat(document.getElementById('custo_milheiro').value) || 17.50;
+        const ori = document.getElementById('origem').value.trim().toUpperCase();
+        const des = document.getElementById('destino').value.trim().toUpperCase();
+
+        if (ori.length < 3 || des.length < 3) {
+            alert("Preencha os códigos IATA (Ex: GRU, MAO, EZE)");
+            return;
+        }
 
         const params = {
-            origem: document.getElementById('origem').value.toUpperCase().trim(),
-            destino: document.getElementById('destino').value.toUpperCase().trim(),
+            origem: ori, destino: des,
             data_ida: document.getElementById('data_ida').value,
             data_volta: document.getElementById('data_volta').value,
-            custo_milheiro: custoMilheiro
+            custo_milheiro: parseFloat(document.getElementById('custo_milheiro').value),
+            pax: parseInt(document.getElementById('passageiros').value),
+            classe: document.getElementById('classe').value
         };
 
-        if(!params.origem || !params.destino || !params.data_ida) return alert("Preencha os campos.");
-
-        loader.style.display = 'block';
-        resultadoArea.style.display = 'none';
-        tabelaResultados.innerHTML = ''; 
+        document.getElementById('loaderArea').style.display = 'block';
+        document.getElementById('resultadoArea').style.display = 'none';
 
         try {
             const res = await fetch('/buscar', {
@@ -82,36 +173,28 @@
             const data = await res.json();
             
             if(data.status === "sucesso") {
-                data.dados.forEach(v => {
-                    const badgeClass = v.sentido === 'IDA' ? 'bg-primary' : 'bg-secondary';
-                    const scoreHtml = v.status_sniper ? `<div class="${v.classe_cor} small fw-bold">${v.status_sniper}</div>` : "";
-                    
-                    // Cálculo do teto (Preço Total - R$410 taxas) / Custo Milheiro
-                    const precoNumerico = parseFloat(v.preco.replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0;
-                    let tetoMilhas = "---";
-                    if (precoNumerico > 0) {
-                        const limite = Math.floor((precoNumerico - 410) / (custoMilheiro / 1000));
-                        tetoMilhas = limite > 0 ? `${limite.toLocaleString('pt-BR')} pts` : "---";
-                    }
+                const tabela = document.getElementById('tabelaResultados');
+                tabela.innerHTML = "";
+                data.dados.forEach((ida, i) => {
+                    if (ida.sentido === "IDA") {
+                        const volta = (i + 1 < data.dados.length && data.dados[i+1].sentido === "VOLTA") ? data.dados[i+1] : null;
+                        const precoTotalBRL = parseFloat(ida.preco.replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0;
+                        const teto = Math.floor(((precoTotalBRL / params.pax) - 410) / (params.custo_milheiro / 1000));
 
-                    tabelaResultados.innerHTML += `
-                        <tr>
-                            <td><span class="badge ${badgeClass} mb-1">${v.sentido}</span>${scoreHtml}</td>
-                            <td><span class="fw-bold text-dark">${v.voo}</span><br><small class="text-muted">${v.escalas}</small></td>
-                            <td>
-                                <div class="fw-bold text-primary" style="font-size: 1.1rem;">${v.data}</div>
-                                <div class="small">${v.trecho}</div>
-                                <span class="horario-tag">${v.horario}</span> <small class="text-muted">${v.duracao}</small>
-                            </td>
-                            <td class="text-end fw-bold text-dark fs-5">${v.preco}</td>
-                            <td class="text-end text-success fw-bold" style="font-size: 1.2rem; background-color: #f8fff9;">${tetoMilhas}</td>
-                            <td class="text-center"><a href="${v.link}" target="_blank" class="btn btn-sm btn-outline-dark">Ver no Site</a></td>
-                        </tr>`;
+                        tabela.innerHTML += `
+                            <tr>
+                                <td><b>${ida.voo}</b> <span class="horario-tag">${ida.horario}</span><br><small>${ida.data}</small></td>
+                                <td>${volta ? `<b>${volta.voo}</b> <span class="horario-tag">${volta.horario}</span><br><small>${volta.data}</small>` : '-'}</td>
+                                <td class="text-end fw-bold">${ida.preco}</td>
+                                <td class="text-end text-success fw-bold">${teto > 0 ? teto.toLocaleString('pt-BR') + ' pts' : '---'}</td>
+                                <td class="text-center"><a href="${ida.link}" target="_blank" class="btn btn-sm btn-dark">VER</a></td>
+                            </tr>`;
+                    }
                 });
-                resultadoArea.style.display = 'block';
-            }
-        } catch(e) { alert("Erro de conexão."); }
-        finally { loader.style.display = 'none'; }
+                document.getElementById('resultadoArea').style.display = 'block';
+            } else { alert(data.mensagem); }
+        } catch(e) { alert("Erro no servidor."); }
+        finally { document.getElementById('loaderArea').style.display = 'none'; }
     }
 </script>
 </body>

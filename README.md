@@ -1,68 +1,21 @@
-<<<<<<< HEAD
-# MyMiles ✈️ - Auditoria Inteligente de Passagens
+# 🎯 MyMiles Sniper - V2.3 (Local Dev)
 
-O **MyMiles** é uma ferramenta de auditoria que utiliza Inteligência Artificial para comparar valores de voos em milhas e dinheiro, trazendo transparência para o mercado de fidelidade aérea.
+O **MyMiles Sniper** é um motor de busca e auditoria para passagens aéreas. Ele extrai tarifas em tempo real e calcula o "Teto de Milhas" para identificar oportunidades de arbitragem entre passagens pagantes e emissões com pontos.
 
-## 🚀 Status do Projeto: Estabilização de IA Concluída
-A aplicação opera com uma arquitetura de microsserviços containerizada, utilizando modelos de última geração para extração de dados.
+## 🚀 Status do Projeto: Fase 1 Concluída
+- ✅ Backend em Flask funcional.
+- ✅ Engine de cálculo de arbitragem (Sniper) calibrada.
+- ✅ Interface com Autocomplete Local (Fim dos erros de busca).
+- ✅ Suporte a múltiplos passageiros e classes.
 
-## 📝 Histórico de Versões (Changelog)
+## 🛠️ Requisitos de Sistema
+- **SO:** Windows 11
+- **Processador:** Intel Core i7-2600
+- **Linguagem:** Python 3.12 (Migrado da 3.14 para maior compatibilidade)
 
-### [2026-03-17] - Estabilização de IA e Melhoria Visual
-- **Motor de IA:** Migração para o modelo `Gemini 1.5 Flash` (estável) para garantir consistência de cota e performance.
-- **Inteligência de Interface:** Implementação de lógica automática de destaque (🥇 Verde) para a menor milhagem da lista.
-- **Robustez de Dados:** Adicionado pré-processamento de texto no frontend para limpar "lixo" HTML antes do envio para a IA.
-- **Diagnóstico:** Criação de ferramenta de validação de modelos disponíveis (`check_models.py`).
+## 📦 Instalação Manual
 
-### [2026-03-14] - Fase 1: Interface e Docker
-- **Interface Visual:** Criação do `index.html` com Bootstrap para exibição de tabelas.
-- **Backend Robusto:** Configuração do servidor Flask rodando em Docker com Gunicorn.
-- **Segurança:** Implementação de permissões CORS e variáveis de ambiente via `.env`.
-
-## 🛠️ Tecnologias Utilizadas
-- **IA:** Google Gemini SDK (`models/gemini-flash-latest`).
-- **Backend:** Python 3.14, Flask, Gunicorn.
-- **Frontend:** JavaScript (Vanilla), Bootstrap 5.
-- **Infraestrutura:** Docker, WSL2, GitHub.
-
-## ⚙️ Como Executar
-1. Certifique-se de ter o arquivo `.env` com sua `GEMINI_API_KEY`.
-2. Build da imagem: `docker build -t mymiles-app .`
-3. Rodar o container: `docker run -p 5000:5000 --env-file .env mymiles-app`
-
----
-=======
-# MyMiles ✈️ - Auditoria Inteligente de Passagens
-
-O **MyMiles** é uma ferramenta de auditoria que utiliza Inteligência Artificial para comparar valores de voos em milhas e dinheiro, trazendo transparência para o mercado de fidelidade aérea.
-
-## 🚀 Status do Projeto: Estabilização de IA Concluída
-A aplicação opera com uma arquitetura de microsserviços containerizada, utilizando modelos de última geração para extração de dados.
-
-## 📝 Histórico de Versões (Changelog)
-
-### [2026-03-17] - Estabilização de IA e Melhoria Visual
-- **Motor de IA:** Migração para o modelo `Gemini 1.5 Flash` (estável) para garantir consistência de cota e performance.
-- **Inteligência de Interface:** Implementação de lógica automática de destaque (🥇 Verde) para a menor milhagem da lista.
-- **Robustez de Dados:** Adicionado pré-processamento de texto no frontend para limpar "lixo" HTML antes do envio para a IA.
-- **Diagnóstico:** Criação de ferramenta de validação de modelos disponíveis (`check_models.py`).
-
-### [2026-03-14] - Fase 1: Interface e Docker
-- **Interface Visual:** Criação do `index.html` com Bootstrap para exibição de tabelas.
-- **Backend Robusto:** Configuração do servidor Flask rodando em Docker com Gunicorn.
-- **Segurança:** Implementação de permissões CORS e variáveis de ambiente via `.env`.
-
-## 🛠️ Tecnologias Utilizadas
-- **IA:** Google Gemini SDK (`models/gemini-flash-latest`).
-- **Backend:** Python 3.14, Flask, Gunicorn.
-- **Frontend:** JavaScript (Vanilla), Bootstrap 5.
-- **Infraestrutura:** Docker, WSL2, GitHub.
-
-## ⚙️ Como Executar
-1. Certifique-se de ter o arquivo `.env` com sua `GEMINI_API_KEY`.
-2. Build da imagem: `docker build -t mymiles-app .`
-3. Rodar o container: `docker run -p 5000:5000 --env-file .env mymiles-app`
-
----
->>>>>>> d10e5449e13c53935bbe0eba624404f25bc0ee3f
-*Desenvolvido como um projeto de automação e transparência em milhas aéreas.*
+1. **Clone o repositório:**
+   ```bash
+   git clone [https://github.com/avernax-droid/MyMiles.git](https://github.com/avernax-droid/MyMiles.git)
+   cd MyMiles
