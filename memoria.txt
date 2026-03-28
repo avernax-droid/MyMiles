@@ -817,3 +817,36 @@ calculado.
 
 Dica de mestre: Salve os arquivos engine.py e index.html em uma pasta separada para não perder as versões que já estão funcionando 
 "quase" 100%.
+
+=======
+
+27/03
+
+📝 Resumo para o seu "Eu" de amanhã:
+Para quando você voltar e quiser dar o "refresh" de memória, aqui está o mapa do projeto:
+
+1. Onde paramos (Status Técnico):
+
+Versão 2.0 Sniper: O código agora é inteligente. Ele identifica se o preço vem em Libras (£) ou Dólares ($), converte para Real (BRL) e extrai a Data Real do voo da API.
+
+Interface Limpa: Removemos a coluna de taxas (que vinha zerada) e focamos no Preço Total e no Teto de Milhas.
+
+Git Local: O commit b8ef94b foi realizado com sucesso. O seu PC "sabe" que a versão atual é a nova.
+
+2. O que falta (O nó do GitHub):
+
+Amanhã, a primeira coisa que faremos é gerar um Personal Access Token (PAT) válido no site do GitHub (com a permissão repo marcada).
+
+Usaremos esse token no lugar de ghp_SEU_TOKEN_AQUI para sincronizar tudo com a nuvem.
+
+3. Próximos Passos sugeridos:
+
+Automatizar a cotação do Dólar/Libra (para não ser fixo no código).
+
+Adicionar filtros por Companhia Aérea no dashboard.
+
+🔗 Link Útil para amanhã:
+Deixo aqui o link direto para você gerar o token assim que voltar:
+GitHub - Personal Access Tokens (Classic)
+
+Dica: Ao gerar, marque a primeira caixinha que diz repo.
