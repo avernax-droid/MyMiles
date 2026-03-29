@@ -902,3 +902,61 @@ Trecho: GRU ✈️ FCO (Ida: 29/03 | Volta: 02/04).
 Preço MyMiles: R$ 14.117,75 (Unitário).
 
 Teto Calculado: 783.299 pts (Milheiro a R$ 17,50).
+
+=======
+
+29/03
+
+O que temos (Versão Estável):
+Módulo scraper.py: Funcional, capturando o token de sessão via Playwright com interceptação de tráfego.
+
+Módulo server.py: Estruturado em Flask, recebendo requisições POST e devolvendo JSON.
+
+Arquitetura: O projeto está no diretório mymiles, usa Python 3.12, e o foco da lógica principal é o engine.py.
+
+O que precisamos corrigir (O "Pulo do Gato"):
+Sincronia de Dados: O engine.py precisa processar os itinerários de forma que a Ida e Volta fiquem na mesma linha (objeto único) para evitar a duplicação de preços na tabela.
+
+Normalização de Preços: Garantir que o valor exibido seja o unitário (preço total / pax) e formatado corretamente em BRL.
+
+Ajuste de Datas: Corrigir a extração dos campos day, month e year no engine.py para evitar que o fuso horário altere a data do voo (o erro do dia 29 vs 30).
+
+Interface (index.html): Atualizar o JavaScript para que ele "saiba" ler essas novas chaves unificadas e mostre os dados nas colunas corretas.
+
+Quando você estiver pronto para retomar, basta dizer: "Podemos continuar com a correção do engine e do index?". 
+Eu estarei aqui com esse contexto fresquinho.
+
+========
+
+29/03
+
+Status Atual: MyMiles V2.6.2 (Estável)
+O que já conquistamos:
+Core Engine: O engine.py e a AIEngine (Gemini 1.5/2.0 Flash) estão extraindo com sucesso dados brutos de passagens (GOL, Smiles, etc.) e convertendo em JSON estruturado.
+
+Interface: Dashboard funcional com separação clara de Preço Unitário, Total e o Teto Sniper (valor máximo em milhas que compensa pagar).
+
+Correção de Arquitetura: Superamos o erro de multiplicar o preço por passageiro (PAX) indevidamente. Agora o sistema diferencia o custo por pessoa do total da reserva.
+
+Ambiente: Python 3.12 estável em venv, sincronizado via terminal com o repositório avernax-droid/mymiles.
+
+O que descobrimos hoje:
+Sensibilidade do Sniper: O cálculo do Teto Sniper atual usa uma taxa fixa de R$ 480 (ideal para internacional). Em voos nacionais, isso torna o cálculo conservador demais.
+
+Mapeamento de Tradução: Analisamos o dicionário de i18n da GOL via F12, o que nos deu insumos sobre regras de bagagem (R$ 38,43/kg excedente) e prazos de check-in (48h).
+
+🚀 Próximos Passos (Onde vamos):
+1. Desvinculação e Generalização (Universalidade)
+Configuração por CIA: Criar um dicionário de constantes no engine.py para que o MyMiles aplique regras diferentes para GOL, LATAM e AZUL automaticamente, sem "fixar" as regras de uma no código da outra.
+
+Sniper Adaptativo: Implementar a lógica de taxa de embarque dinâmica (Nacional vs. Internacional) para que o valor em milhas sugerido seja preciso para qualquer destino.
+
+2. Expansão do Dashboard
+Alertas de Bagagem: Integrar os valores de excesso de peso descobertos hoje para criar um "calculador de risco" de bagagem no front-end.
+
+Cronômetro de Check-in: Usar a regra das 48h para mostrar um contador de quando a marcação de assento ficará gratuita.
+
+3. Refinamento da Extração
+Melhorar o prompt do Gemini para identificar o "Tipo de Voo" (Nacional/Internacional) logo na captura, facilitando a escolha da taxa de embarque no Sniper.
+
+Nota para o "Futuro Gemini": O projeto está rodando no diretório mymiles. O arquivo de lógica principal é o engine.py (não o miles.py). O usuário prefere manter a autonomia do app em relação às companhias aéreas específicas.

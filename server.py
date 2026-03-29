@@ -11,25 +11,34 @@ def index():
 def buscar():
     try:
         data = request.json
-        # Adicionamos a captura da 'classe' vinda do JSON (index.html)
+        
+        # Captura os dados do frontend com fallbacks seguros
+        origem = data.get('origem', '').upper()
+        destino = data.get('destino', '').upper()
+        data_ida = data.get('data_ida')
+        data_volta = data.get('data_volta')
+        custo_milheiro = float(data.get('custo_milheiro', 17.50))
+        pax = int(data.get('pax', 1)) # GARANTE QUE O PAX SEJA TRATADO COMO INTEIRO
+        classe = data.get('classe', 'ECONOMY')
+
+        # Chamada para o engine.py
         res = buscar_voos_completos(
-            origem=data['origem'].upper(),
-            destino=data['destino'].upper(),
-            data_ida=data['data_ida'],
-            data_volta=data.get('data_volta'),
-            custo_milheiro=float(data['custo_milheiro']),
-            pax=int(data['pax']),
-            classe=data.get('classe', 'ECONOMY')  # <--- O argumento faltante aqui!
+            origem=origem,
+            destino=destino,
+            data_ida=data_ida,
+            data_volta=data_volta,
+            custo_milheiro=custo_milheiro,
+            pax=pax,
+            classe=classe
         )
         
         if not res:
-            return jsonify({"status": "erro", "mensagem": "Nenhum voo encontrado."})
+            return jsonify({"status": "erro", "mensagem": "Nenhum voo encontrado ou erro na captura do token."})
             
         return jsonify({"status": "sucesso", "dados": res})
         
     except Exception as e:
-        # Imprime o erro no terminal para facilitar o debug se algo falhar
-        print(f"❌ Erro no processamento: {e}")
+        print(f"❌ [SERVER] Erro no processamento: {e}")
         return jsonify({"status": "erro", "mensagem": str(e)})
 
 if __name__ == '__main__':
