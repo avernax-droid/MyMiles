@@ -3,83 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyMiles Sniper - V2.6.2</title>
+    <title>MyMiles Sniper - V2.6.5</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/css/autoComplete.02.min.css">
     
     <style>
         :root { --sniper-gold: #fcc419; }
+        body { background-color: #f8f9fa; }
+        
+        /* Ajuste para exibir o ícone de calendário sem sobreposição */
+        input[type="date"] {
+            font-size: 0.8rem;
+            padding-right: 2px !important;
+        }
+
+        /* Estilização básica */
         .horario-tag { font-size: 0.8rem; font-weight: bold; background: #f1f3f5; padding: 4px 8px; border-radius: 6px; color: #212529; border: 1px solid #dee2e6; }
         .info-voo { font-size: 0.75rem; color: #6c757d; display: block; margin-top: 5px; line-height: 1.5; }
         .status-badge { font-size: 0.65rem; font-weight: bold; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; }
         .table-v2 td { vertical-align: top; padding: 16px !important; border-bottom: 1px solid #f1f1f1; }
         .table-warning { background-color: #fff9db !important; border-left: 5px solid var(--sniper-gold); }
+        
         #loaderArea { display: none; }
         .autoComplete_wrapper { width: 100% !important; }
-        .autoComplete_wrapper > input { width: 100% !important; height: 42px; border-radius: 8px !important; border: 1px solid #ced4da !important; }
-        .form-label-sm { font-size: 0.75rem; font-weight: bold; color: #495057; margin-bottom: 4px; display: block; }
-        .text-total-reserva { font-size: 0.7rem; color: #adb5bd; margin-top: 2px; }
+        .autoComplete_wrapper > input { width: 100% !important; height: 38px; border-radius: 6px !important; border: 1px solid #ced4da !important; font-size: 0.85rem; }
+        
+        .form-label-sm { font-size: 0.65rem; font-weight: 800; color: #6c757d; margin-bottom: 3px; display: block; text-transform: uppercase; }
+        .compact-input { height: 38px; font-size: 0.82rem; padding: 0.375rem 0.4rem; }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
-<div class="container-fluid px-4 py-5">
-    <div class="card p-4 shadow-sm mb-4 border-0" style="border-radius: 15px;">
-        <h2 class="text-primary mb-4 fw-bold"><i class="bi bi-target"></i> MyMiles Sniper</h2>
-        <div class="row g-3 align-items-end">
+<div class="container-fluid px-3 py-4">
+    <div class="card p-3 shadow-sm mb-4 border-0" style="border-radius: 12px;">
+        <h6 class="text-primary mb-3 fw-bold"><i class="bi bi-radar"></i> MYMILES SNIPER</h6>
+        
+        <div class="row g-2 align-items-end">
             <div class="col-md-2">
-                <span class="form-label-sm">ORIGEM</span>
-                <input id="origem" type="search" placeholder="Ex: GRU" class="form-control">
+                <span class="form-label-sm">Origem</span>
+                <input id="origem" type="search" placeholder="Ex: São Paulo" class="form-control compact-input" autocomplete="off">
             </div>
             <div class="col-md-2">
-                <span class="form-label-sm">DESTINO</span>
-                <input id="destino" type="search" placeholder="Ex: FCO" class="form-control">
+                <span class="form-label-sm">Destino</span>
+                <input id="destino" type="search" placeholder="Ex: Roma" class="form-control compact-input" autocomplete="off">
             </div>
-            <div class="col-md-2">
-                <span class="form-label-sm">DATAS (IDA / VOLTA)</span>
-                <div class="input-group">
-                    <input type="date" id="data_ida" class="form-control">
-                    <input type="date" id="data_volta" class="form-control">
-                </div>
+            
+            <div class="col-md-1" style="flex: 0 0 12%; max-width: 12%;">
+                <span class="form-label-sm">Data Ida</span>
+                <input type="date" id="data_ida" class="form-control compact-input">
             </div>
-            <div class="col-md-1">
-                <span class="form-label-sm">PAX</span>
-                <input type="number" id="passageiros" class="form-control" value="1" min="1">
+            <div class="col-md-1" style="flex: 0 0 12%; max-width: 12%;">
+                <span class="form-label-sm">Data Volta</span>
+                <input type="date" id="data_volta" class="form-control compact-input">
             </div>
-            <div class="col-md-2">
-                <span class="form-label-sm">CLASSE</span>
-                <select id="classe" class="form-select">
-                    <option value="ECONOMY" selected>Econômica</option>
-                    <option value="BUSINESS">Executiva</option>
+
+            <div class="col-md-1" style="flex: 0 0 7%; max-width: 7%;">
+                <span class="form-label-sm">Passag.</span>
+                <input type="number" id="passageiros" class="form-control compact-input text-center" value="1" min="1">
+            </div>
+            
+            <div class="col-md-1" style="flex: 0 0 10%; max-width: 10%;">
+                <span class="form-label-sm">Classe</span>
+                <select id="classe" class="form-select compact-input">
+                    <option value="ECONOMY" selected>Econ.</option>
+                    <option value="BUSINESS">Exec.</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <span class="form-label-sm">CUSTO MILHEIRO (R$)</span>
-                <input type="number" id="custo_milheiro" class="form-control" value="17.50" step="0.10">
+            
+            <div class="col-md-1" style="flex: 0 0 10%; max-width: 10%;">
+                <span class="form-label-sm">Milheiro (R$)</span>
+                <input type="number" id="custo_milheiro" class="form-control compact-input text-center" value="17.50" step="0.10">
             </div>
-            <div class="col-md-1">
-                <button class="btn btn-primary w-100 fw-bold" style="height:42px" onclick="executarBusca()">BUSCAR</button>
+            
+            <div class="col-md-1" style="flex-grow: 1;">
+                <button class="btn btn-primary w-100 fw-bold compact-input" onclick="executarBusca()">
+                    <i class="bi bi-search"></i> BUSCAR
+                </button>
             </div>
         </div>
     </div>
 
     <div id="loaderArea" class="text-center p-5">
-        <div class="spinner-grow text-primary"></div>
-        <h5 class="mt-3 text-secondary">Sniping flights...</h5>
+        <div class="spinner-border text-primary" role="status"></div>
+        <h6 class="mt-3 text-secondary fw-bold">Rastreando melhores tarifas...</h6>
     </div>
 
     <div id="resultadoArea" style="display:none;">
-        <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
+        <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 table-v2">
                     <thead class="table-dark">
                         <tr>
-                            <th width="25%">Trecho Ida</th>
-                            <th width="25%">Trecho Volta</th>
-                            <th class="text-end" width="15%">Preço Pagante</th>
-                            <th class="text-end text-warning" width="15%">Teto Sniper (Milhas)</th>
-                            <th class="text-center" width="10%">Ação</th>
+                            <th width="28%">Trecho Ida</th>
+                            <th width="28%">Trecho Volta</th>
+                            <th class="text-end" width="18%">Preço Pagante</th>
+                            <th class="text-end text-warning" width="18%">Teto Sniper (Milhas)</th>
+                            <th class="text-center" width="8%">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaResultados"></tbody>
@@ -101,17 +121,26 @@
         { name: "Buenos Aires - Ezeiza", code: "EZE" }, { name: "Santiago", code: "SCL" }
     ];
 
+    const selecionados = { origem: "", destino: "" };
+
     const setup = (id) => {
         new autoComplete({
             selector: `#${id}`,
             data: { src: aeroportos, keys: ["name", "code"] },
-            resultItem: { element: (item, data) => {
-                item.innerHTML = `<div class="d-flex justify-content-between"><span>${data.value.name}</span><b>${data.value.code}</b></div>`;
-            }},
-            events: { input: { selection: (event) => {
-                const sel = event.detail.selection.value;
-                document.getElementById(id).value = sel.code; // Armazena apenas o código para facilitar o envio
-            }}}
+            resultItem: { 
+                element: (item, data) => {
+                    item.innerHTML = `<div class="d-flex justify-content-between" style="font-size:0.8rem"><span>${data.value.name}</span><b class="text-primary">${data.value.code}</b></div>`;
+                }
+            },
+            events: { 
+                input: { 
+                    selection: (event) => {
+                        const sel = event.detail.selection.value;
+                        document.getElementById(id).value = sel.name;
+                        selecionados[id] = sel.code;
+                    }
+                } 
+            }
         });
     };
     setup("origem"); setup("destino");
@@ -120,10 +149,10 @@
         const pax = parseInt(document.getElementById('passageiros').value);
         const custo = parseFloat(document.getElementById('custo_milheiro').value);
         
-        // Limpeza básica caso o usuário digite o nome manualmente
         const getCode = (id) => {
+            if (selecionados[id]) return selecionados[id];
             const val = document.getElementById(id).value.trim();
-            return val.includes('-') ? val.split('-').pop().trim() : val.toUpperCase();
+            return val.length === 3 ? val.toUpperCase() : val; 
         };
 
         const params = {
@@ -135,6 +164,11 @@
             custo_milheiro: custo,
             pax: pax
         };
+
+        if (!params.origem || !params.destino || !params.data_ida) {
+            alert("Preencha origem, destino e data de ida!");
+            return;
+        }
 
         document.getElementById('loaderArea').style.display = 'block';
         document.getElementById('resultadoArea').style.display = 'none';
@@ -153,18 +187,15 @@
                 
                 data.dados.forEach((itin, index) => {
                     const precoUnitarioBRL = itin.valor_sort; 
-                    
-                    // Cálculo Sniper: (Preço Unitário - Estimativa Taxa Embarque) / (Custo Milheiro/1000)
                     const taxaEst = itin.tipo === "RT" ? 480 : 240; 
                     const teto = Math.floor((precoUnitarioBRL - taxaEst) / (custo / 1000));
-                    
                     const isBest = index === 0;
 
                     let row = `<tr class="${isBest ? 'table-warning' : ''}">
                         <td>
-                            ${isBest ? '<span class="badge bg-danger mb-1"><i class="bi bi-fire"></i> MELHOR PREÇO</span><br>' : ''}
-                            <div class="mb-2">
-                                <span class="status-badge bg-primary text-white">IDA</span> <b>${itin.cia}</b>
+                            ${isBest ? '<span class="badge bg-danger mb-1" style="font-size:0.6rem"><i class="bi bi-fire"></i> MELHOR PREÇO</span><br>' : ''}
+                            <div class="mb-1">
+                                <span class="status-badge bg-primary text-white">IDA</span> <b style="font-size:0.8rem">${itin.cia}</b>
                             </div>
                             <span class="horario-tag"><i class="bi bi-clock"></i> ${itin.ida_hora}</span>
                             <span class="info-voo">
@@ -174,9 +205,9 @@
                         </td>
                         <td>
                             ${itin.tipo === "RT" ? `
-                                <div style="height: 20px"></div>
-                                <div class="mb-2">
-                                    <span class="status-badge bg-secondary text-white">VOLTA</span> <b>${itin.cia}</b>
+                                <div style="height: 18px"></div>
+                                <div class="mb-1">
+                                    <span class="status-badge bg-secondary text-white">VOLTA</span> <b style="font-size:0.8rem">${itin.cia}</b>
                                 </div>
                                 <span class="horario-tag"><i class="bi bi-clock"></i> ${itin.volta_hora}</span>
                                 <span class="info-voo">
@@ -185,17 +216,17 @@
                                 </span>
                             ` : '<div class="text-muted small mt-4">Trecho Único</div>'}
                         </td>
-                        <td class="text-end pt-4">
-                            <div class="fw-bold" style="font-size: 1.1rem;">${itin.preco_fmt}</div>
-                            <div class="text-muted small">por pessoa</div>
+                        <td class="text-end pt-3">
+                            <div class="fw-bold" style="font-size: 1rem;">${itin.preco_fmt}</div>
+                            <div class="text-muted" style="font-size: 0.65rem;">por passageiro</div>
                             <div class="text-total-reserva">Total: ${itin.preco_total_fmt}</div>
                         </td>
-                        <td class="text-end text-success fw-bold pt-4" style="font-size: 1.1rem;">
+                        <td class="text-end text-success fw-bold pt-3" style="font-size: 1rem;">
                             ${teto > 0 ? teto.toLocaleString('pt-BR') + ' pts' : '---'}
-                            <div class="text-muted fw-normal" style="font-size: 0.65rem;">Sugerido por PAX</div>
+                            <div class="text-muted fw-normal" style="font-size: 0.6rem;">Sugerido por PAX</div>
                         </td>
-                        <td class="text-center pt-4">
-                            <a href="${itin.link}" target="_blank" class="btn btn-dark btn-sm px-4 rounded-pill">Ver</a>
+                        <td class="text-center pt-3">
+                            <a href="${itin.link}" target="_blank" class="btn btn-dark btn-sm rounded-pill px-3">Ver</a>
                         </td>
                     </tr>`;
                     tabela.innerHTML += row;
