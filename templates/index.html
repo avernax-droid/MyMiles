@@ -12,13 +12,11 @@
         :root { --sniper-gold: #fcc419; }
         body { background-color: #f8f9fa; }
         
-        /* Ajuste para exibir o ícone de calendário sem sobreposição */
         input[type="date"] {
             font-size: 0.8rem;
             padding-right: 2px !important;
         }
 
-        /* Estilização básica */
         .horario-tag { font-size: 0.8rem; font-weight: bold; background: #f1f3f5; padding: 4px 8px; border-radius: 6px; color: #212529; border: 1px solid #dee2e6; }
         .info-voo { font-size: 0.75rem; color: #6c757d; display: block; margin-top: 5px; line-height: 1.5; }
         .status-badge { font-size: 0.65rem; font-weight: bold; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; }
@@ -31,6 +29,9 @@
         
         .form-label-sm { font-size: 0.65rem; font-weight: 800; color: #6c757d; margin-bottom: 3px; display: block; text-transform: uppercase; }
         .compact-input { height: 38px; font-size: 0.82rem; padding: 0.375rem 0.4rem; }
+
+        /* Ajuste fino para a lista do autocomplete */
+        .autoComplete_wrapper > ul { border-radius: 8px; border: 1px solid #dee2e6; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -42,11 +43,11 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-2">
                 <span class="form-label-sm">Origem</span>
-                <input id="origem" type="search" placeholder="Ex: São Paulo" class="form-control compact-input" autocomplete="off">
+                <input id="origem" type="search" placeholder="Busque cidade ou IATA..." class="form-control compact-input" autocomplete="off">
             </div>
             <div class="col-md-2">
                 <span class="form-label-sm">Destino</span>
-                <input id="destino" type="search" placeholder="Ex: Roma" class="form-control compact-input" autocomplete="off">
+                <input id="destino" type="search" placeholder="Busque cidade ou IATA..." class="form-control compact-input" autocomplete="off">
             </div>
             
             <div class="col-md-1" style="flex: 0 0 12%; max-width: 12%;">
@@ -111,39 +112,49 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/autoComplete.min.js"></script>
 <script>
-    const aeroportos = [
-        { name: "São Paulo - Guarulhos", code: "GRU" }, { name: "São Paulo - Congonhas", code: "CGH" },
-        { name: "Rio de Janeiro - Galeão", code: "GIG" }, { name: "Brasília", code: "BSB" },
-        { name: "Roma - Fiumicino", code: "FCO" }, { name: "Lisboa", code: "LIS" },
-        { name: "Madrid - Barajas", code: "MAD" }, { name: "Londres - Heathrow", code: "LHR" },
-        { name: "Paris - CDG", code: "CDG" }, { name: "Frankfurt", code: "FRA" },
-        { name: "Miami", code: "MIA" }, { name: "Nova York - JFK", code: "JFK" },
-        { name: "Buenos Aires - Ezeiza", code: "EZE" }, { name: "Santiago", code: "SCL" }
-    ];
-
     const selecionados = { origem: "", destino: "" };
 
     const setup = (id) => {
         new autoComplete({
             selector: `#${id}`,
-            data: { src: aeroportos, keys: ["name", "code"] },
-            resultItem: { 
+            data: {
+                src: async (query) => {
+                    try {
+                        const source = await fetch(`/api/aeroportos?q=${query}`);
+                        const data = await source.json();
+                        return data;
+                    } catch (error) {
+                        return error;
+                    }
+                },
+                keys: ["name", "code"]
+            },
+            resultItem: {
                 element: (item, data) => {
-                    item.innerHTML = `<div class="d-flex justify-content-between" style="font-size:0.8rem"><span>${data.value.name}</span><b class="text-primary">${data.value.code}</b></div>`;
+                    item.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center w-100" style="font-size:0.75rem; padding: 2px 4px;">
+                            <span>${data.value.name}</span>
+                            <span class="badge bg-light text-primary border">${data.value.code}</span>
+                        </div>`;
                 }
             },
-            events: { 
-                input: { 
+            events: {
+                input: {
                     selection: (event) => {
-                        const sel = event.detail.selection.value;
-                        document.getElementById(id).value = sel.name;
-                        selecionados[id] = sel.code;
+                        const feedback = event.detail.selection.value;
+                        document.getElementById(id).value = `${feedback.code} - ${feedback.name.split(' - ')[0]}`;
+                        selecionados[id] = feedback.code;
                     }
-                } 
-            }
+                }
+            },
+            debounce: 200,
+            threshold: 2,
+            searchEngine: "loose"
         });
     };
-    setup("origem"); setup("destino");
+    
+    setup("origem");
+    setup("destino");
 
     async function executarBusca() {
         const pax = parseInt(document.getElementById('passageiros').value);
@@ -152,7 +163,8 @@
         const getCode = (id) => {
             if (selecionados[id]) return selecionados[id];
             const val = document.getElementById(id).value.trim();
-            return val.length === 3 ? val.toUpperCase() : val; 
+            // Se o usuário digitou direto o código (ex: GRU)
+            return val.split(' - ')[0].toUpperCase(); 
         };
 
         const params = {
