@@ -960,3 +960,19 @@ Cronômetro de Check-in: Usar a regra das 48h para mostrar um contador de quando
 Melhorar o prompt do Gemini para identificar o "Tipo de Voo" (Nacional/Internacional) logo na captura, facilitando a escolha da taxa de embarque no Sniper.
 
 Nota para o "Futuro Gemini": O projeto está rodando no diretório mymiles. O arquivo de lógica principal é o engine.py (não o miles.py). O usuário prefere manter a autonomia do app em relação às companhias aéreas específicas.
+
+=====
+01/04
+
+💾 MyMiles Sniper - Checkpoint V2.6.5
+Status: Versão estável sincronizada no GitHub (0980e96).
+O que foi feito: * Implementação das badges de Duração e Paradas no index.html.
+
+Refino do cálculo de Limite p/ Milhas (subtraindo taxas de R$ 480 RT / R$ 240 OW).
+
+Sincronização do motor de busca (Python/Flask) com o layout Bootstrap.
+
+Ponto de Retorno (Próximo Passo): 1.  Ajustar a exibição dos nomes completos das cidades/aeroportos no card de resultados (atualmente 
+aparece apenas o código IATA ou rótulos genéricos).
+2.  Validar se o engine.py está enviando os campos origem_full e destino_full para o frontend.
+3.  Revisar a captura de dados da Arajet/Kiwi para tratar discrepâncias de câmbio (BRL vs USD).

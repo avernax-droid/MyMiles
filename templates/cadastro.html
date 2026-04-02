@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyMiles - Cadastro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@1,700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --primary-dark: #0f172a; 
+            --accent-blue: #1d4ed8; 
+            --bg-page: #eef2f6; 
+            --bg-search: #cfe2ff; 
+        }
+
+        body { 
+            background-color: var(--bg-page);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: var(--bg-search);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #accbff;
+        }
+
+        .logo-login {
+            font-family: 'Kanit', sans-serif;
+            font-weight: 700;
+            font-style: italic;
+            color: var(--primary-dark);
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+            transform: skewX(-6deg);
+        }
+
+        .form-control {
+            border-radius: 10px;
+            padding: 10px;
+            border: 2px solid #cbd5e1;
+        }
+
+        .btn-login {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="logo-login">MyMiles</div>
+    <h5 class="text-center mb-4 fw-bold opacity-75">Criar Nova Conta</h5>
+
+    <form action="{{ url_for('cadastro') }}" method="POST">
+        <div class="mb-3">
+            <label class="form-label small fw-bold">NOME COMPLETO</label>
+            <input type="text" name="nome" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-bold">E-MAIL</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+        <div class="mb-4">
+            <label class="form-label small fw-bold">SENHA</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn-login mb-3">Cadastrar</button>
+    </form>
+    
+    <div class="text-center small">
+        Já tem conta? <a href="{{ url_for('login') }}" style="color: var(--accent-blue); text-decoration: none; font-weight: 600;">Voltar ao Login</a>
+    </div>
+</div>
+
+</body>
+</html>
