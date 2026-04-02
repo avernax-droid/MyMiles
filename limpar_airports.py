@@ -4,101 +4,62 @@ import json
 def processar_base_airports(caminho_input):
     print(f"--- Iniciando limpeza de {caminho_input} ---")
     
-    # 1. Carregar o CSV original
     try:
+        # Lendo o CSV
         df = pd.read_csv(caminho_input, low_memory=False)
     except FileNotFoundError:
         print("Erro: Arquivo airports.csv não encontrado.")
         return
 
-    # 2. FILTRAGEM ESTRATÉGICA
-    # Removemos helipontos (como o TSS), aeroportos pequenos e pistas desativadas.
-    # Mantemos apenas aeroportos médios e grandes que possuem código IATA e serviço comercial.
+    # 1. FILTRAGEM: Apenas aeroportos grandes/médios com código IATA e serviço comercial
     df_filt = df[
         (df['type'].isin(['large_airport', 'medium_airport'])) & 
         (df['iata_code'].notna()) &
         (df['scheduled_service'] == 'yes')
     ].copy()
 
-    # 3. DICIONÁRIO DE TRADUÇÃO EXPANDIDO (Com variações de busca para PT-BR)
+    # 2. DICIONÁRIO DE TRADUÇÃO (Expandido para melhor busca)
     traducoes = {
-        # América do Norte
-        "New York": "Nova York Nova Iorque NYC", 
-        "Miami": "Miami", "Orlando": "Orlando", 
-        "Los Angeles": "Los Angeles", "Chicago": "Chicago", "Washington": "Washington",
-        "Las Vegas": "Las Vegas", "San Francisco": "São Francisco", "Toronto": "Toronto",
-        "Mexico City": "Cidade do México", "Vancouver": "Vancouver",
-        
-        # Europa
-        "London": "Londres London Heathrow Gatwick", 
-        "Paris": "Paris Orly Charles de Gaulle", 
-        "Rome": "Roma Rome", "Milan": "Milão Milano",
-        "Lisbon": "Lisboa Lisbon", "Madrid": "Madri Madrid", "Frankfurt": "Frankfurt", 
-        "Amsterdam": "Amsterdã Amsterdam", "Zurich": "Zurique Zurich", "Brussels": "Bruxelas",
-        "Vienna": "Viena", "Athens": "Atenas", "Prague": "Praga", "Dublin": "Dublin",
-        "Munich": "Munique", "Florence": "Florença", "Venice": "Veneza", "Porto": "Porto",
-        
-        # América do Sul e Caribe
-        "Buenos Aires": "Buenos Aires BUE EZE AEP", 
-        "Santiago": "Santiago", "Montevideo": "Montevidéu",
-        "Bogota": "Bogotá", "Lima": "Lima", "Cancun": "Cancún", "Punta Cana": "Punta Cana",
-        "Asuncion": "Assunção", "La Paz": "La Paz",
-        
-        # Ásia, África e Oceania
-        "Tokyo": "Tóquio Toquio Tokyo Haneda Narita", 
-        "Beijing": "Pequim Beijing", "Seoul": "Seul Seoul", "Dubai": "Dubai",
-        "Doha": "Doha", "Istanbul": "Istambul Istanbul", "Cairo": "Cairo", "Tel Aviv": "Tel Aviv",
-        "Sydney": "Sydney", "Bangkok": "Bangkok", "Shanghai": "Xangai Shanghai"
+        "Turin": "Turim|Turin Torino TRN",
+        "Warsaw": "Varsóvia|Warsaw Warszawa WAW",
+        "New York": "Nova York|Nova Iorque NYC JFK EWR",
+        "London": "Londres|London Heathrow Gatwick LHR",
+        "Sao Paulo": "São Paulo|Guarulhos Congonhas GRU CGH",
+        "Rio de Janeiro": "Rio de Janeiro|Galeão Santos Dumont GIG SDU",
+        "Milan": "Milão|Milano Milan MXP",
+        "Munich": "Munique|Munchen Munich MUC",
+        "Lisbon": "Lisboa|Lisbon LIS",
+        "Rome": "Roma|Rome FCO"
     }
 
-    def traduzir_municipio(municipio_original):
-        m_str = str(municipio_original)
-        # Tenta encontrar a tradução. Se o nome original contém a chave (ex: "Tokyo/Narita"), traduz.
-        for en, pt in traducoes.items():
-            if en.lower() in m_str.lower():
-                return pt
-        return m_str
-
-    def formatar_nome_exibicao(row):
-        cidade_en = str(row['municipality'])
-        # Pega a tradução (apenas o primeiro nome para exibição limpa)
-        cidade_pt = traduzir_municipio(cidade_en).split(' ')[0]
-        # Retorna no formato: Cidade (Código IATA)
-        return f"{cidade_pt} ({row['iata_code']})"
-
-    # Criamos a coluna 'display_name' que será o texto principal no seu AutoComplete
-    df_filt['display_name'] = df_filt.apply(formatar_nome_exibicao, axis=1)
-    
-    # Criamos uma coluna de busca robusta (search_key)
-    def criar_termos_busca(row):
-        cidade_en = str(row['municipality']).lower()
-        # Aqui pegamos todos os sinônimos (Tóquio, Toquio, Tokyo, etc.)
-        cidade_pt_sinonimos = traduzir_municipio(cidade_en).lower()
-        iata = str(row['iata_code']).lower()
-        nome_aeroporto = str(row['name']).lower()
+    def formatar_dados(row):
+        municipio_csv = str(row['municipality'])
+        iata = str(row['iata_code'])
         
-        # Unificamos tudo em uma string para busca parcial
-        return f"{cidade_en} {cidade_pt_sinonimos} {iata} {nome_aeroporto}"
+        if municipio_csv in traducoes:
+            info = traducoes[municipio_csv]
+            nome_pt = info.split('|')[0]
+            tags = info.split('|')[1]
+        else:
+            nome_pt = municipio_csv
+            tags = municipio_csv
 
-    df_filt['search_terms'] = df_filt.apply(criar_termos_busca, axis=1)
+        # Exibição: "São Paulo (GRU)"
+        display_name = f"{nome_pt} ({iata})"
+        
+        # Chave de busca interna: tudo que o usuário pode digitar
+        search_key = f"{nome_pt} {tags} {iata} {row['name']} {row['iso_country']}".lower()
 
-    # 4. SELEÇÃO DE COLUNAS FINAIS
-    colunas_finais = {
-        'iata_code': 'code',
-        'display_name': 'name',
-        'search_terms': 'search_key',
-        'iso_country': 'country'
-    }
-    
-    df_final = df_filt[colunas_finais.keys()].rename(columns=colunas_finais)
+        return pd.Series({'code': iata, 'name': display_name, 'search_key': search_key})
 
-    # 5. Salvar em JSON para o servidor
+    df_final = df_filt.apply(formatar_dados, axis=1)
+    df_final['country'] = df_filt['iso_country'].values
+
+    # Salva o arquivo que o Flask/API deve ler
     df_final.to_json('aeroportos_sniper.json', orient='records', force_ascii=False, indent=2)
     
     print(f"--- Limpeza Concluída! ---")
-    print(f"Aeroportos originais: {len(df)}")
-    print(f"Aeroportos Comerciais (Sniper): {len(df_final)}")
-    print("Arquivo gerado: aeroportos_sniper.json")
+    print(f"Aeroportos processados: {len(df_final)}")
 
 if __name__ == "__main__":
     processar_base_airports('airports.csv')

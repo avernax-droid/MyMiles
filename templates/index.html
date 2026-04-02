@@ -3,108 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyMiles Sniper - V2.6.5</title>
+    <title>MyMiles - V2.6.5</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/css/autoComplete.02.min.css">
+    <!-- FONTE PARA EFEITO DE VELOCIDADE -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@1,700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
         :root { 
-            --primary-blue: #003580; 
-            --accent-blue: #006ce4; 
-            --bg-light: #f5f7fa;
+            --primary-dark: #0f172a; 
+            --accent-blue: #1d4ed8; 
+            --bg-page: #eef2f6; 
+            /* AZUL DE FUNDO MAIS ESCURO E DEFINIDO */
+            --bg-search: #cfe2ff; 
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            --result-border: #accbff; 
         }
 
         body { 
-            background-color: var(--bg-light); 
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background-color: var(--bg-page) !important;
+            font-family: 'Inter', sans-serif; 
+            color: #1e293b;
         }
 
         .hero-bg {
-            background-color: var(--primary-blue);
-            padding: 40px 0 60px 0;
+            background: linear-gradient(180deg, #0f172a 0%, #1e40af 60%, #3b82f6 100%);
+            padding: 50px 0 90px 0;
             color: white;
-            margin-bottom: -40px;
+            margin-bottom: -50px;
+        }
+
+        .hero-bg h1 {
+            font-family: 'Kanit', sans-serif;
+            font-weight: 700; 
+            font-style: italic;
+            text-transform: none; 
+            letter-spacing: 1px; 
+            transform: skewX(-6deg); 
+            font-size: 3.5rem;
+            text-shadow: 2px 4px 8px rgba(0,0,0,0.2);
         }
 
         .search-box {
-            background: #fff;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        }
-
-        .field-group {
-            position: relative;
-            margin-bottom: 10px;
+            background: var(--bg-search);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--result-border); 
         }
 
         .field-label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #495057;
+            display: flex;
+            align-items: center;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #475569;
             text-transform: uppercase;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
         }
+
+        .field-label i { margin-right: 5px; color: var(--accent-blue); }
 
         .custom-input {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
+            padding: 12px 14px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
             font-size: 0.95rem;
-            font-weight: 500;
+            font-weight: 600;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s ease;
+            background-color: #ffffff;
         }
 
         .custom-input:focus {
             border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(0, 108, 228, 0.1);
+            box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.1);
         }
 
-        .btn-search-slim {
+        .btn-search-sniper {
             background: var(--accent-blue);
             color: white;
             border: none;
-            border-radius: 6px;
-            padding: 10px 25px;
+            border-radius: 10px;
+            padding: 0 40px;
             font-weight: 700;
-            transition: 0.2s;
-            height: 45px;
-            margin-top: 25px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease-in-out;
+            height: 50px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
 
-        .btn-search-slim:hover { background: #0051ad; }
+        .btn-search-sniper:hover { 
+            background: #1e40af;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.2);
+        }
 
         .autoComplete_wrapper { width: 100% !important; }
         .autoComplete_wrapper > ul { 
             z-index: 9999 !important; 
-            border-radius: 8px;
-            border: 1px solid #ddd;
+            border-radius: 12px; 
+            border: none; 
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            padding: 10px;
+            background-color: #fff;
         }
 
-        .flight-card {
-            background: white;
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            margin-bottom: 15px;
+        .flight-card { 
+            background: var(--bg-search); 
+            border-radius: 14px; 
+            border: 1px solid var(--result-border); 
+            transition: transform 0.2s; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
         }
-
-        .price-tag { color: var(--accent-blue); font-size: 1.4rem; font-weight: 800; }
-        .points-badge { background: #e7f3ff; color: var(--accent-blue); padding: 5px 12px; border-radius: 20px; font-weight: 800; }
+        .flight-card:hover { transform: scale(1.01); }
         
-        /* Badge para informações extras de voo */
-        .flight-info-badge {
-            background: #f1f3f5;
-            color: #495057;
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-right: 5px;
-            display: inline-flex;
-            align-items: center;
+        .price-tag { color: #0f172a; font-size: 1.5rem; font-weight: 800; }
+        .points-badge { background: #dcfce7; color: #166534; padding: 8px 16px; border-radius: 10px; font-weight: 800; display: inline-block; border: 1px solid #bbf7d0; }
+        
+        .flight-info-badge { 
+            background: rgba(255,255,255,0.6); 
+            color: #475569; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            margin-right: 6px; 
+            display: inline-flex; 
+            align-items: center; 
+            border: 1px solid rgba(187, 217, 251, 0.8); 
+        }
+        
+        /* BOTÃO RESERVAR MENOR E ALINHADO */
+        .btn-reservar-small { 
+            background-color: var(--accent-blue) !important; 
+            border: none !important; 
+            color: white !important;
+            padding: 8px 20px !important;
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+            border-radius: 50px !important;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            float: right; /* Garante alinhamento à direita */
+        }
+        .btn-reservar-small:hover { 
+            background-color: #1e40af !important; 
+            transform: translateY(-1px);
         }
 
         #loaderArea { display: none; }
@@ -114,45 +167,47 @@
 
 <div class="hero-bg">
     <div class="container text-center">
-        <h2 class="fw-bold">MyMiles Sniper</h2>
-        <p class="opacity-75 small">Versão 2.6.5</p>
+        <h1 class="mb-1">MyMiles</h1>
+        <p class="opacity-75 small fw-bold">Inteligência em Passagens e Milhas • V2.6.5</p>
     </div>
 </div>
 
 <div class="container">
     <div class="search-box mb-5">
-        <div class="row g-3"> 
-            <div class="col-md-3">
+        <div class="row g-3 mb-3"> 
+            <div class="col-lg-4 col-md-6">
                 <div class="field-group">
-                    <label class="field-label">Origem</label>
+                    <label class="field-label"><i class="bi bi-geo-alt-fill"></i> Origem</label>
                     <input id="origem" type="text" class="custom-input" placeholder="Cidade ou Aeroporto" autocomplete="off">
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-lg-4 col-md-6">
                 <div class="field-group">
-                    <label class="field-label">Destino</label>
+                    <label class="field-label"><i class="bi bi-send-fill"></i> Destino</label>
                     <input id="destino" type="text" class="custom-input" placeholder="Para onde vai?" autocomplete="off">
                 </div>
             </div>
 
-            <div class="col-md-2 col-6">
+            <div class="col-lg-2 col-md-6 col-6">
                 <div class="field-group">
-                    <label class="field-label">Data Ida</label>
+                    <label class="field-label"><i class="bi bi-calendar-check"></i> Ida</label>
                     <input type="date" id="data_ida" class="custom-input">
                 </div>
             </div>
 
-            <div class="col-md-2 col-6">
+            <div class="col-lg-2 col-md-6 col-6">
                 <div class="field-group">
-                    <label class="field-label">Data Volta</label>
+                    <label class="field-label"><i class="bi bi-calendar-x"></i> Volta</label>
                     <input type="date" id="data_volta" class="custom-input">
                 </div>
             </div>
+        </div>
 
-            <div class="col-md-2">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-3 col-md-4">
                 <div class="field-group">
-                    <label class="field-label">Classe</label>
+                    <label class="field-label"><i class="bi bi-star-fill"></i> Classe</label>
                     <select id="classe" class="custom-input">
                         <option value="ECONOMY">Econômica</option>
                         <option value="BUSINESS">Executiva</option>
@@ -160,35 +215,35 @@
                 </div>
             </div>
 
-            <div class="col-md-2 col-6">
+            <div class="col-lg-2 col-md-4 col-6">
                 <div class="field-group">
-                    <label class="field-label small">Passageiros</label>
+                    <label class="field-label"><i class="bi bi-people-fill"></i> Passageiros</label>
                     <input type="number" id="passageiros" value="1" min="1" class="custom-input">
                 </div>
             </div>
 
-            <div class="col-md-2 col-6">
+            <div class="col-lg-2 col-md-4 col-6">
                 <div class="field-group">
-                    <label class="field-label small">Custo Milheiro</label>
+                    <label class="field-label"><i class="bi bi-currency-dollar"></i> Milheiro R$</label>
                     <input type="number" id="custo_milheiro" value="17.50" step="0.50" class="custom-input">
                 </div>
             </div>
 
-            <div class="col-md-8 text-end">
-                <button class="btn-search-slim px-5 shadow-sm" onclick="executarBusca()">
-                    <i class="bi bi-search me-2"></i>BUSCAR PASSAGENS
+            <div class="col d-flex justify-content-end">
+                <button class="btn-search-sniper" onclick="executarBusca()">
+                    <i class="bi bi-search me-2"></i>VER
                 </button>
             </div>
         </div>
     </div>
 
     <div id="loaderArea" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-3 fw-bold text-muted">Buscando tarifas em tempo real...</p>
+        <div class="spinner-grow text-primary" role="status"></div>
+        <p class="mt-3 fw-bold text-muted">Buscando as melhores tarifas...</p>
     </div>
 
     <div id="resultadoArea" style="display:none;" class="row justify-content-center">
-        <div class="col-lg-11" id="tabelaResultados"></div>
+        <div class="col-lg-12" id="tabelaResultados"></div>
     </div>
 </div>
 
@@ -196,32 +251,40 @@
 <script>
     const selecionados = { origem: "", destino: "" };
 
-    const setup = (id) => {
+    const setupAutocomplete = (id) => {
         new autoComplete({
             selector: `#${id}`,
             data: {
                 src: async (query) => {
-                    const source = await fetch(`/api/aeroportos?q=${query}`);
-                    return await source.json();
+                    try {
+                        const source = await fetch(`/api/aeroportos?q=${query}`);
+                        return await source.json();
+                    } catch (error) { return []; }
                 },
                 keys: ["search_key"]
             },
+            searchEngine: "loose", 
+            threshold: 2,
+            resultsList: { maxResults: 12 },
             resultItem: {
                 element: (item, data) => {
                     item.innerHTML = `
-                        <div class="d-flex justify-content-between p-1">
-                            <span style="font-size: 0.9rem">${data.value.name}</span>
-                            <b class="text-primary ms-2">${data.value.code}</b>
+                        <div class="d-flex justify-content-between align-items-center w-100 px-2 py-1">
+                            <div>
+                                <i class="bi bi-airplane-fill me-2 text-secondary" style="font-size: 0.8rem"></i>
+                                <span style="font-weight: 600">${data.value.name}</span>
+                            </div>
+                            <span class="badge bg-light text-primary border">${data.value.code}</span>
                         </div>`;
                 }
             },
             events: {
                 input: {
                     selection: (event) => {
-                        const feedback = event.detail.selection.value;
+                        const selection = event.detail.selection.value;
                         const inputField = document.getElementById(id);
-                        inputField.value = feedback.name; 
-                        selecionados[id] = feedback.code;
+                        inputField.value = selection.name; 
+                        selecionados[id] = selection.code;
                         inputField.blur();
                     }
                 }
@@ -229,20 +292,20 @@
         });
     };
     
-    setup("origem");
-    setup("destino");
+    setupAutocomplete("origem");
+    setupAutocomplete("destino");
 
     async function executarBusca() {
-        const getCode = (id) => {
+        const getFinalCode = (id) => {
             if (selecionados[id]) return selecionados[id];
             const val = document.getElementById(id).value;
-            const m = val.match(/\(([A-Z]{3})\)/);
-            return m ? m[1] : val.substring(0,3).toUpperCase();
+            const match = val.match(/\(([A-Z]{3})\)/);
+            return match ? match[1] : val.substring(0,3).toUpperCase();
         };
 
         const params = {
-            origem: getCode('origem'),
-            destino: getCode('destino'),
+            origem: getFinalCode('origem'),
+            destino: getFinalCode('destino'),
             data_ida: document.getElementById('data_ida').value,
             data_volta: document.getElementById('data_volta').value,
             classe: document.getElementById('classe').value,
@@ -269,54 +332,55 @@
                 
                 data.dados.forEach(itin => {
                     const taxa = itin.tipo === "RT" ? 480 : 240;
-                    const teto = Math.floor((itin.valor_sort - taxa) / (params.custo_milheiro / 1000));
+                    const milheiro_base = params.custo_milheiro || 17.50;
+                    const teto = Math.floor((itin.valor_sort - taxa) / (milheiro_base / 1000));
                     
                     container.innerHTML += `
-                        <div class="flight-card p-4 mb-3 shadow-sm">
+                        <div class="flight-card p-4 mb-3 shadow-sm border-0">
                             <div class="row align-items-center">
-                                <div class="col-md-2 text-center border-end">
-                                    <h6 class="fw-bold mb-1">${itin.cia}</h6>
-                                    <i class="bi bi-airplane text-primary"></i>
+                                <div class="col-md-2 text-center border-end mb-3 mb-md-0">
+                                    <div class="text-uppercase small fw-bold text-muted mb-1">${itin.cia}</div>
+                                    <i class="bi bi-airplane-fill fs-3 text-primary"></i>
                                 </div>
-                                <div class="col-md-5 px-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="badge bg-primary">IDA</span>
-                                        <span class="fw-bold">${itin.ida_hora}</span>
-                                        <small class="text-muted">${itin.ida_data}</small>
+                                <div class="col-md-5 px-lg-5 mb-3 mb-md-0">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge rounded-pill bg-primary px-3">IDA</span>
+                                        <span class="fw-bold fs-5">${itin.ida_hora}</span>
+                                        <small class="text-muted fw-bold">${itin.ida_data}</small>
                                     </div>
-                                    <div class="mb-2">
-                                        <span class="flight-info-badge"><i class="bi bi-clock me-1"></i>${itin.ida_duracao || '--'}</span>
-                                        <span class="flight-info-badge"><i class="bi bi-geo me-1"></i>${itin.ida_paradas || '--'}</span>
+                                    <div class="mb-3">
+                                        <span class="flight-info-badge"><i class="bi bi-clock-history me-1"></i>${itin.ida_duracao || '--'}</span>
+                                        <span class="flight-info-badge"><i class="bi bi-signpost-split me-1"></i>${itin.ida_paradas || '--'}</span>
                                     </div>
 
                                     ${itin.tipo === "RT" ? `
-                                    <div class="pt-2 border-top">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <span class="badge bg-secondary">VOLTA</span>
-                                            <span class="fw-bold">${itin.volta_hora}</span>
-                                            <small class="text-muted">${itin.volta_data}</small>
+                                    <div class="pt-3 border-top">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge rounded-pill bg-secondary px-3">VOLTA</span>
+                                            <span class="fw-bold fs-5">${itin.volta_hora}</span>
+                                            <small class="text-muted fw-bold">${itin.volta_data}</small>
                                         </div>
                                         <div>
-                                            <span class="flight-info-badge"><i class="bi bi-clock me-1"></i>${itin.volta_duracao || '--'}</span>
-                                            <span class="flight-info-badge"><i class="bi bi-geo me-1"></i>${itin.volta_paradas || '--'}</span>
+                                            <span class="flight-info-badge"><i class="bi bi-clock-history me-1"></i>${itin.volta_duracao || '--'}</span>
+                                            <span class="flight-info-badge"><i class="bi bi-signpost-split me-1"></i>${itin.volta_paradas || '--'}</span>
                                         </div>
                                     </div>` : ''}
                                 </div>
-                                <div class="col-md-3 text-end pe-4 border-start">
-                                    <div class="small text-muted">Pagante c/ Taxas</div>
-                                    <div class="price-tag">${itin.preco_fmt}</div>
+                                <div class="col-md-3 text-center text-md-end pe-md-5 border-start">
+                                    <div class="small text-muted fw-bold text-uppercase">Dinheiro c/ Taxas</div>
+                                    <div class="price-tag mb-2">${itin.preco_fmt}</div>
                                 </div>
-                                <div class="col-md-2 text-center">
-                                    <div class="small text-muted mb-1 fw-bold">Limite p/ Milhas</div>
-                                    <div class="points-badge mb-2">${teto.toLocaleString('pt-BR')} pts</div>
-                                    <a href="${itin.link}" target="_blank" class="btn btn-sm btn-dark w-100 rounded-pill">Ver Voo</a>
+                                <div class="col-md-2 text-center mt-3 mt-md-0">
+                                    <div class="small text-muted mb-2 fw-bold text-uppercase">Limite p/ Milhas</div>
+                                    <div class="points-badge mb-3">${teto.toLocaleString('pt-BR')} pts</div>
+                                    <a href="${itin.link}" target="_blank" class="btn-reservar-small">RESERVAR</a>
                                 </div>
                             </div>
                         </div>`;
                 });
                 document.getElementById('resultadoArea').style.display = 'block';
-            }
-        } catch(e) { alert("Erro ao conectar com o motor de busca."); }
+            } else { alert("Nenhum voo encontrado."); }
+        } catch(e) { alert("Erro de conexão."); } 
         finally { document.getElementById('loaderArea').style.display = 'none'; }
     }
 </script>
