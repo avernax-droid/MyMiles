@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyMiles - Minha Carteira</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@1,700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --primary-dark: #0f172a; 
+            --accent-blue: #1d4ed8; 
+            --bg-page: #eef2f6; 
+            --bg-search: #cfe2ff; 
+        }
+
+        body { 
+            background-color: var(--bg-page);
+            font-family: 'Inter', sans-serif;
+            padding-top: 30px;
+            padding-bottom: 50px;
+        }
+
+        .logo-small {
+            font-family: 'Kanit', sans-serif;
+            font-weight: 700; font-style: italic;
+            color: var(--primary-dark);
+            font-size: 1.8rem;
+            text-decoration: none;
+            transform: skewX(-6deg);
+            display: inline-block;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 5px solid var(--accent-blue);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .carteira-card {
+            background: var(--bg-search);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 1px solid #accbff;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #cbd5e1;
+            padding: 8px 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .btn-save-mini {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            transition: 0.3s;
+            height: 42px;
+        }
+        .btn-save-mini:hover { background: #1e40af; transform: translateY(-1px); }
+
+        .btn-export {
+            background: #fff;
+            color: var(--primary-dark);
+            border: 2px solid var(--primary-dark);
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            text-decoration: none;
+        }
+
+        .table-custom {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .table-custom thead { background: var(--primary-dark); color: white; }
+
+        .preview-cpm {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--accent-blue);
+            position: absolute;
+            bottom: -22px;
+        }
+        
+        .field-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #475569;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- ÁREA DE MENSAGENS (FLASH) -->
+    <div class="row justify-content-center">
+        <div class="col-12">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show small py-2 mb-4" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <a href="{{ url_for('index') }}" class="logo-small">MyMiles</a>
+        <div class="d-flex gap-2">
+            <a href="#" class="btn-export">
+                <i class="bi bi-download me-1"></i> BAIXAR
+            </a>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold d-flex align-items-center">
+                VOLTAR
+            </a>
+        </div>
+    </div>
+
+    <!-- CARDS DE RESUMO -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-4">
+            <div class="summary-card">
+                <small class="text-muted fw-bold">SALDO TOTAL</small>
+                <h3 class="fw-800 mb-0">
+                    {{ "{:,}".format(saldo).replace(',', '.') }} <span class="fs-6 text-muted">pts</span>
+                </h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="summary-card" style="border-left-color: #f59e0b;">
+                <small class="text-muted fw-bold">CPM MÉDIO GERAL</small>
+                <h3 class="fw-800 mb-0">
+                    R$ {{ "{:,.2f}".format(cpm_geral).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+                </h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="summary-card" style="border-left-color: #10b981;">
+                <small class="text-muted fw-bold">INVESTIMENTO TOTAL</small>
+                <h3 class="fw-800 mb-0">R$ {{ "{:,.2f}".format(investimento).replace(',', 'X').replace('.', ',').replace('X', '.') }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULÁRIO DE NOVA ENTRADA -->
+    <div class="carteira-card mb-5">
+        <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-plus-circle-fill me-2"></i>NOVA ENTRADA</h6>
+        <form action="{{ url_for('carteira') }}" method="POST">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label class="field-label"><i class="bi bi-calendar3 me-1"></i> Data</label>
+                    <input type="date" name="data_compra" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="field-label"><i class="bi bi-award me-1"></i> Programa</label>
+                    <select name="programa" class="form-select" required>
+                        <option value="Smiles">Smiles</option>
+                        <option value="Azul">Azul</option>
+                        <option value="Latam Pass">Latam Pass</option>
+                        <option value="Livelo">Livelo</option>
+                        <option value="Esfera">Esfera</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="field-label"><i class="bi bi-hash me-1"></i> Quantidade</label>
+                    <input type="number" id="input_qtd" name="quantidade" class="form-control" placeholder="0" required>
+                </div>
+                <div class="col-md-4 position-relative">
+                    <label class="field-label"><i class="bi bi-currency-dollar me-1"></i> Valor Total Pago</label>
+                    <div class="d-flex gap-2">
+                        <input type="number" id="input_valor" name="valor_pago" step="0.01" class="form-control" placeholder="R$ 0,00" required>
+                        <button type="submit" class="btn-save-mini d-flex align-items-center">
+                            <i class="bi bi-save me-2"></i> SALVAR
+                        </button>
+                    </div>
+                    <span id="preview_cpm" class="preview-cpm"></span>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- TABELA HISTÓRICO -->
+    <h6 class="fw-bold text-muted mb-3 text-uppercase small" style="letter-spacing: 1px;">Histórico de Aquisições</h6>
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle">
+            <thead>
+                <tr class="small text-uppercase">
+                    <th class="ps-4">DATA</th>
+                    <th>PROGRAMA</th>
+                    <th>QUANTIDADE</th>
+                    <th>CUSTO TOTAL</th>
+                    <th>CPM</th>
+                    <th class="text-center">AÇÕES</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in milhas %}
+                <tr>
+                    <td class="ps-4 small fw-bold">{{ m.data }}</td>
+                    <td><span class="badge bg-warning text-dark">{{ m.programa }}</span></td>
+                    <td class="fw-bold">{{ "{:,}".format(m.quantidade).replace(',', '.') }}</td>
+                    <td>R$ {{ "{:,.2f}".format(m.valor_pago).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+                    <td class="text-primary fw-bold small">
+                        R$ {{ "{:,.2f}".format(m.cpm).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm text-danger opacity-75"><i class="bi bi-trash3"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const inputQtd = document.getElementById('input_qtd');
+    const inputValor = document.getElementById('input_valor');
+    const previewCpm = document.getElementById('preview_cpm');
+
+    function calcularPreview() {
+        const qtd = parseFloat(inputQtd.value);
+        const valor = parseFloat(inputValor.value);
+        if (qtd > 0 && valor > 0) {
+            const cpm = (valor / (qtd / 1000)).toFixed(2);
+            previewCpm.innerHTML = `CPM PREVISTO: R$ ${cpm.replace('.', ',')}`;
+            previewCpm.style.color = "#1d4ed8";
+        } else {
+            previewCpm.innerHTML = "";
+        }
+    }
+    inputQtd.addEventListener('input', calcularPreview);
+    inputValor.addEventListener('input', calcularPreview);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

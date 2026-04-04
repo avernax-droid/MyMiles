@@ -976,3 +976,100 @@ Ponto de Retorno (Próximo Passo): 1.  Ajustar a exibição dos nomes completos 
 aparece apenas o código IATA ou rótulos genéricos).
 2.  Validar se o engine.py está enviando os campos origem_full e destino_full para o frontend.
 3.  Revisar a captura de dados da Arajet/Kiwi para tratar discrepâncias de câmbio (BRL vs USD).
+
+=====
+02/04
+
+📑 Relatório de Progresso: Projeto MyMiles
+Data da última atualização: 02 de Abril de 2026
+
+1. Infraestrutura e Banco de Dados (O Grande Salto)
+Resolução de Conflito de Portas: O MySQL do Windows estava ocupando a porta padrão 3306. Alteramos a configuração do MySQL no Ubuntu (WSL) para operar na porta 3307.
+
+Arquivo alterado: /etc/mysql/mysql.conf.d/mysqld.cnf (removido o # e mudado para port = 3307).
+
+Conexão Visual: O MySQL Workbench agora possui uma conexão dedicada chamada MyMiles-Ubuntu apontando para 127.0.0.1:3307. Conseguimos visualizar a tabela usuarios com sucesso.
+
+Acesso root: Senha confirmada como TonMix#25.
+
+2. Back-end (Flask & SQLAlchemy)
+Ajuste de URI: O server.py foi atualizado para conectar na nova porta:
+mysql+mysqlconnector://root:TonMix%2325@localhost:3307/mymiles_db
+
+Modernização de Código: Identificamos que o método User.query.get() é legado e estamos prontos para usar db.session.get(User, id).
+
+Fluxo de Autenticação: Login e Logout validados. O sistema redireciona corretamente usuários deslogados para a tela de login ao tentarem acessar a index.
+
+3. Front-end e Arquivos
+Templates: Criamos e validamos as telas de login.html e cadastro.html.
+
+Arquivos de Apoio: aeroportos_sniper.json e memoria.txt foram atualizados e sincronizados.
+
+4. Versionamento (GitHub)
+Commit de Segurança: Fizemos o push para o repositório avernax-droid/MyMiles.
+
+Estado Atual: A branch main está 100% atualizada com a versão funcional da porta 3307.
+
+🚀 Próximos Passos Pendentes:
+Lógica do Sniper: Implementar a busca real usando os dados do JSON de aeroportos.
+
+Histórico de Consultas: Criar tabela no banco para salvar as buscas do Antonio.
+
+UI/UX: Refinar o design da página de busca de voos.
+
+Quando você voltar, basta me dizer: "Retomar MyMiles do relatório" e estaremos prontos para decolar!
+
+=====
+
+03/04
+
+📑 Relatório de Planejamento: Expansão MyMiles
+Status: Estrutura de Banco de Dados Pronta | Interface e Lógica Pendentes.
+
+1. O que já foi feito (Back-end & DB)
+MySQL (Porta 3307): As tabelas aquisicoes (Carteira) e historico_buscas já foram criadas fisicamente via script SQL no Workbench.
+
+Definição de Regra de Negócio: Estabelecemos a lógica de Custo Real vs. Mercado. O sistema priorizará o preço médio da carteira do usuário para auditar as milhas.
+
+2. Alterações a Fazer (Próximos Passos)
+Módulo: server.py (O Cérebro)
+Mapeamento SQLAlchemy: Adicionar as classes Aquisicao e HistoricoBusca para que o Flask reconheça as tabelas que você criou no MySQL.
+
+Nova Rota /carteira: Criar a função que processa o formulário de entrada de milhas e calcula o saldo por programa.
+
+Modernização do Loader: Atualizar User.query.get() para db.session.get(User, id).
+
+Integração com o Sniper: Alterar a rota /buscar para que ela salve o resultado do engine.py na tabela historico_buscas automaticamente.
+
+Módulo: templates/index.html (O Dashboard)
+Navegação: Inserir o botão "Minha Carteira" no topo (ao lado do botão Sair) com o ícone bi-wallet2.
+
+Atalho de Auditoria: Adicionar um link pequeno "(VER CARTEIRA)" próximo ao campo de valor do milheiro.
+
+Módulo: templates/carteira.html (Novo Módulo)
+Criação do Arquivo: Desenvolver esta nova interface para:
+
+Cadastrar novas compras (Programa, Qtd, Valor Pago).
+
+Visualizar o CPM Médio (Custo por milheiro) de cada programa.
+
+Listar o histórico de entradas de milhas.
+
+3. Resumo da "Trindade" de Dados
+Quando terminarmos essas alterações, o MyMiles funcionará assim:
+
+Usuário (Quem sou eu?)
+
+Carteira (Quanto custam minhas milhas hoje?)
+
+Histórico/Sniper (Qual foi o melhor preço que o robô achou e quanto eu economizei de verdade?)
+
+4. Checklist para o Retorno
+Ao voltar, o fluxo será:
+
+Atualizar as Classes Model no server.py.
+
+Criar o arquivo carteira.html.
+
+Testar a primeira inserção de milhas e ver se o CPM médio aparece na tela.
+
