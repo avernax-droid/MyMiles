@@ -132,7 +132,8 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <a href="{{ url_for('index') }}" class="logo-small">MyMiles</a>
         <div class="d-flex gap-2">
-            <a href="#" class="btn-export">
+            <!-- CORREÇÃO AQUI: Mudamos href="#" para o link da rota -->
+            <a href="{{ url_for('exportar_carteira') }}" class="btn-export">
                 <i class="bi bi-download me-1"></i> BAIXAR
             </a>
             <a href="{{ url_for('index') }}" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold d-flex align-items-center">

@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, make_response
 import json
 import os
+import csv
+import io
 from datetime import datetime
 from engine import buscar_voos_completos
 
@@ -53,7 +55,7 @@ def carregar_base_sniper():
 
 db_aeroportos = carregar_base_sniper()
 
-# --- ROTAS ---
+# --- ROTAS DE AUTENTICAÇÃO ---
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -72,7 +74,9 @@ def login():
 def cadastro():
     if current_user.is_authenticated: return redirect(url_for('index'))
     if request.method == 'POST':
-        nome, email, senha = request.form.get('nome'), request.form.get('email').lower(), request.form.get('password')
+        nome = request.form.get('nome')
+        email = request.form.get('email').lower()
+        senha = request.form.get('password')
         if User.query.filter_by(email=email).first():
             flash('E-mail já cadastrado.', 'warning')
             return redirect(url_for('cadastro'))
@@ -85,6 +89,8 @@ def cadastro():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+# --- ROTAS DA APLICAÇÃO ---
 
 @app.route('/')
 @login_required
@@ -105,7 +111,7 @@ def buscar():
     res = buscar_voos_completos(d['origem'].upper(), d['destino'].upper(), d['data_ida'], d['data_volta'], float(d['custo_milheiro']), int(d['pax']), d['classe'])
     return jsonify({"status": "sucesso", "dados": res})
 
-# --- ROTA DA CARTEIRA REVISADA ---
+# --- ROTA DA CARTEIRA ---
 @app.route('/carteira', methods=['GET', 'POST'])
 @login_required
 def carteira():
@@ -128,7 +134,6 @@ def carteira():
 
     compras = Aquisicao.query.filter_by(user_id=current_user.id).all()
     
-    # Cálculos Totais (Garantindo que sejam float)
     investimento_total = 0.0
     saldo_total = 0
     milhas_processadas = []
@@ -155,6 +160,40 @@ def carteira():
                            investimento=investimento_total,
                            saldo=saldo_total,
                            cpm_geral=cpm_geral)
+
+# --- ROTA DE EXPORTAÇÃO CSV ALTERADA ---
+@app.route('/carteira/exportar')
+@login_required
+def exportar_carteira():
+    compras = Aquisicao.query.filter_by(user_id=current_user.id).order_by(Aquisicao.data_operacao.desc()).all()
+    
+    output = io.StringIO()
+    # Mantendo o delimitador ';' que você sugeriu para compatibilidade Excel
+    writer = csv.writer(output, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+    
+    writer.writerow(['Data', 'Programa', 'Quantidade', 'Valor Pago (R$)', 'CPM (R$)'])
+    
+    for c in compras:
+        v_pago = float(c.valor_pago)
+        cpm = (v_pago / (c.quantidade / 1000)) if c.quantidade > 0 else 0
+        writer.writerow([
+            c.data_operacao.strftime('%d/%m/%Y'),
+            c.programa,
+            c.quantidade,
+            f"{v_pago:.2f}".replace('.', ','), # Formato de moeda BR
+            f"{cpm:.2f}".replace('.', ',')
+        ])
+    
+    # O segredo para o Excel: Adicionar o BOM (Byte Order Mark) UTF-8 no início
+    conteudo_csv = "\ufeff" + output.getvalue()
+    
+    response = make_response(conteudo_csv)
+    filename = f"mymiles_extrato_{datetime.now().strftime('%Y%m%d')}.csv"
+    
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    response.headers["Content-type"] = "text/csv; charset=utf-8"
+    
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
