@@ -6,9 +6,9 @@ import io
 from datetime import datetime
 from engine import buscar_voos_completos
 
-# Importações para Banco de Dados e Login
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+# Importação da estrutura de dados centralizada
+from models import db, User, Aquisicao, HistoricoBusca
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -18,26 +18,11 @@ app.config['SECRET_KEY'] = 'TonMix_Secret_99'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:TonMix%2325@localhost:3307/mymiles_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+# Inicializa o banco com o app
+db.init_app(app)
+
 login_manager = LoginManager(app)
 login_manager.login_view = 'login' 
-
-# --- MODELOS DE DADOS ---
-class User(UserMixin, db.Model):
-    __tablename__ = 'usuarios'
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-
-class Aquisicao(db.Model):
-    __tablename__ = 'aquisicoes'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
-    programa = db.Column(db.String(50), nullable=False)
-    quantidade = db.Column(db.Integer, nullable=False)
-    valor_pago = db.Column(db.Numeric(10, 2), nullable=False)
-    data_operacao = db.Column(db.DateTime, nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -85,7 +70,7 @@ def cadastro():
 
 @app.route('/logout')
 def logout():
-    session.pop('filtros_mymiles', None) # Limpa busca ao sair
+    session.pop('filtros_mymiles', None)
     logout_user()
     return redirect(url_for('login'))
 
@@ -93,7 +78,6 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    # Recupera os filtros da sessão para devolver ao formulário
     filtros = session.get('filtros_mymiles')
     return render_template('index.html', user=current_user, filtros=filtros)
 
@@ -108,9 +92,6 @@ def api_aeroportos():
 @login_required
 def buscar():
     d = request.json
-    
-    # SALVAR NA SESSÃO: Salvamos o dicionário completo enviado pelo JS
-    # d contém: origem (IATA), origem_nome, destino (IATA), destino_nome, datas, etc.
     session['filtros_mymiles'] = d
     
     res = buscar_voos_completos(
@@ -122,9 +103,71 @@ def buscar():
         int(d['pax']), 
         d['classe']
     )
+    
+    if res and len(res) > 0:
+        try:
+            melhor_voo = res[0]
+            taxa_estimada = 480 if d['data_volta'] else 240
+            limite_calculado = int((float(melhor_voo['valor_sort']) - taxa_estimada) / (float(d['custo_milheiro']) / 1000))
+
+            novo_historico = HistoricoBusca(
+                user_id=current_user.id,
+                origem_iata=d['origem'].upper(),
+                origem_nome=d['origem_nome'],
+                destino_iata=d['destino'].upper(),
+                destino_nome=d['destino_nome'],
+                data_ida=datetime.strptime(d['data_ida'], '%Y-%m-%d').date(),
+                data_volta=datetime.strptime(d['data_volta'], '%Y-%m-%d').date() if d['data_volta'] else None,
+                classe=d['classe'],
+                pax=int(d['pax']),
+                melhor_cia=melhor_voo['cia'],
+                melhor_preco_rs=float(melhor_voo['valor_sort']),
+                limite_milhas=limite_calculado,
+                valor_milheiro_usado=float(d['custo_milheiro'])
+            )
+            db.session.add(novo_historico)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Erro ao salvar histórico: {e}")
+
     return jsonify({"status": "sucesso", "dados": res})
 
-# --- ROTA DA CARTEIRA ---
+# --- ROTA HISTÓRICO ---
+@app.route('/historico')
+@login_required
+def historico():
+    buscas = HistoricoBusca.query.filter_by(user_id=current_user.id).order_by(HistoricoBusca.data_consulta.desc()).all()
+    return render_template('historico.html', user=current_user, buscas=buscas)
+
+@app.route('/historico/exportar')
+@login_required
+def exportar_historico():
+    buscas = HistoricoBusca.query.filter_by(user_id=current_user.id).order_by(HistoricoBusca.data_consulta.desc()).all()
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+    writer.writerow(['Data Consulta', 'Origem', 'Destino', 'Data Ida', 'Data Volta', 'Cia', 'Preço (R$)', 'Limite Milhas', 'Milheiro Base'])
+    
+    for b in buscas:
+        writer.writerow([
+            b.data_consulta.strftime('%d/%m/%Y %H:%M'),
+            f"{b.origem_nome} ({b.origem_iata})",
+            f"{b.destino_nome} ({b.destino_iata})",
+            b.data_ida.strftime('%d/%m/%Y'),
+            b.data_volta.strftime('%d/%m/%Y') if b.data_volta else '-',
+            b.melhor_cia,
+            f"{float(b.melhor_preco_rs):.2f}".replace('.', ','),
+            b.limite_milhas,
+            f"{float(b.valor_milheiro_usado):.2f}".replace('.', ',')
+        ])
+    
+    conteudo_csv = "\ufeff" + output.getvalue()
+    response = make_response(conteudo_csv)
+    filename = f"mymiles_historico_{datetime.now().strftime('%Y%m%d')}.csv"
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    response.headers["Content-type"] = "text/csv; charset=utf-8"
+    return response
+
 @app.route('/carteira', methods=['GET', 'POST'])
 @login_required
 def carteira():
@@ -146,14 +189,12 @@ def carteira():
         return redirect(url_for('carteira'))
 
     compras = Aquisicao.query.filter_by(user_id=current_user.id).all()
-    investimento_total = 0.0
-    saldo_total = 0
+    investimento_total = sum(float(c.valor_pago) for c in compras)
+    saldo_total = sum(c.quantidade for c in compras)
+    
     milhas_processadas = []
-
     for c in compras:
         v_pago = float(c.valor_pago)
-        investimento_total += v_pago
-        saldo_total += c.quantidade
         cpm = (v_pago / (c.quantidade / 1000)) if c.quantidade > 0 else 0
         milhas_processadas.append({
             'data': c.data_operacao.strftime('%d/%m/%Y'),

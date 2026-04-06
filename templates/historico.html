@@ -16,6 +16,7 @@
             --bg-search: #cfe2ff; 
             --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
             --result-border: #accbff; 
+            --table-blue: #1e40af; /* Azul para o cabeçalho da tabela */
         }
 
         body { 
@@ -41,32 +42,6 @@
             margin-bottom: 0;
         }
 
-        .btn-top-nav {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-        }
-
-        .btn-nav-item {
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.85rem;
-            padding: 8px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px;
-            transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.1);
-            display: inline-flex;
-            align-items: center;
-        }
-        .btn-nav-item:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: white;
-            color: white;
-        }
-
         .content-card {
             background: var(--bg-search);
             border-radius: 16px;
@@ -76,68 +51,89 @@
             margin-top: 30px;
         }
 
-        .btn-baixar {
-            background-color: #10b981;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 8px 25px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            transition: all 0.3s;
+        /* COMUM AOS BOTÕES (Fundo Branco, Borda e Fonte) */
+        .btn-base {
+            background-color: #ffffff !important;
+            color: var(--primary-dark) !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 6px 18px !important;
+            font-weight: 700 !important;
+            font-size: 0.8rem !important;
+            text-transform: uppercase;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            /* Garantia de alinhamento manual se necessário */
-            margin-left: auto; 
+            transition: all 0.2s;
         }
-        .btn-baixar:hover {
-            background-color: #059669;
-            color: white;
-            transform: translateY(-2px);
+        .btn-base:hover {
+            background-color: #f8fafc !important;
+            border-color: var(--accent-blue) !important;
+            color: var(--accent-blue) !important;
+            transform: translateY(-1px);
         }
 
+        /* 1. BOTÃO BAIXAR: Retangular com cantos arredondados (8px) */
+        .btn-rect { border-radius: 8px !important; }
+
+        /* 2. BOTÃO VOLTAR: Oval / Pílula (50px) */
+        .btn-oval { border-radius: 50px !important; }
+
+        /* 3. ESTILO DA TABELA E CABEÇALHO AZUL */
         .table {
             background-color: white;
             border-radius: 10px;
             overflow: hidden;
+            border-collapse: separate;
         }
+        .thead-blue {
+            background-color: var(--table-blue) !important;
+            color: white !important;
+        }
+        .thead-blue th {
+            border: none !important;
+            padding: 12px 15px !important;
+            font-size: 0.85rem;
+        }
+
+        .badge-miles { background: #dcfce7; color: #166534; font-weight: 800; border: 1px solid #bbf7d0; }
     </style>
 </head>
 <body>
 
 <div class="hero-bg text-center">
-    <div class="btn-top-nav">
-        <a href="{{ url_for('index') }}" class="btn-nav-item">
-            <i class="bi bi-arrow-left me-2"></i> VOLTAR
-        </a>
-    </div>
     <h1>MyMiles</h1>
     <p class="opacity-75 small fw-bold">Histórico de Auditoria • V2.6.5</p>
 </div>
 
 <div class="container pb-5">
     <div class="content-card">
-        <!-- Flexbox para alinhar Título à Esquerda e Botão à Direita -->
-        <div class="d-flex justify-content-between align-items-center mb-4 w-100">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold mb-0 text-dark">
                 <i class="bi bi-clock-history me-2 text-primary"></i>Consultas Realizadas
             </h4>
-            <a href="{{ url_for('exportar_historico') }}" class="btn-baixar">
-                <i class="bi bi-download me-2"></i>BAIXAR
-            </a>
+            
+            <div class="d-flex gap-2">
+                <!-- BOTÃO BAIXAR: RETANGULAR -->
+                <a href="{{ url_for('exportar_historico') }}" class="btn-base btn-rect">
+                    <i class="bi bi-download me-2 text-success"></i>BAIXAR
+                </a>
+                <!-- BOTÃO VOLTAR: OVAL -->
+                <a href="{{ url_for('index') }}" class="btn-base btn-oval">
+                    <i class="bi bi-arrow-left me-2 text-secondary"></i>VOLTAR
+                </a>
+            </div>
         </div>
 
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
+                <thead class="thead-blue">
                     <tr>
                         <th>Data/Hora</th>
-                        <th>Trecho</th>
-                        <th>Voo</th>
+                        <th>Itinerário (Cidade/Sigla)</th>
+                        <th>Datas</th>
                         <th>Cia</th>
                         <th class="text-end">Preço</th>
-                        <th class="text-end">Milheiro</th>
+                        <th class="text-center">Limite Milhas</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -145,18 +141,35 @@
                     <tr>
                         <td class="small text-muted">{{ b.data_consulta.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td>
-                            <span class="fw-bold">{{ b.origem_iata }}</span>
-                            <i class="bi bi-arrow-right mx-1 text-primary"></i>
-                            <span class="fw-bold">{{ b.destino_iata }}</span>
+                            <div class="d-flex align-items-center">
+                                <div>
+                                    <span class="fw-bold text-primary">{{ b.origem_iata }}</span>
+                                    <div class="small text-muted" style="font-size: 0.72rem;">{{ b.origem_nome }}</div>
+                                </div>
+                                <i class="bi bi-arrow-right mx-3 text-secondary" style="font-size: 0.8rem;"></i>
+                                <div>
+                                    <span class="fw-bold text-primary">{{ b.destino_iata }}</span>
+                                    <div class="small text-muted" style="font-size: 0.72rem;">{{ b.destino_nome }}</div>
+                                </div>
+                            </div>
                         </td>
-                        <td>{{ b.data_ida.strftime('%d/%m/%Y') }}</td>
-                        <td><span class="badge bg-light text-primary border">{{ b.melhor_cia }}</span></td>
-                        <td class="text-end fw-bold">R$ {{ "{:,.2f}".format(b.melhor_preco_rs).replace('.', ',') }}</td>
-                        <td class="text-end text-muted">R$ {{ "{:,.2f}".format(b.valor_milheiro_usado).replace('.', ',') }}</td>
+                        <td class="small">
+                            <div><i class="bi bi-calendar-event me-1"></i>{{ b.data_ida.strftime('%d/%m/%Y') }}</div>
+                            {% if b.data_volta %}
+                                <div class="text-success"><i class="bi bi-calendar-check me-1"></i>{{ b.data_volta.strftime('%d/%m/%Y') }}</div>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge bg-light text-primary border" style="font-size: 0.75rem;">{{ b.melhor_cia }}</span></td>
+                        <td class="text-end fw-bold">R$ {{ "{:,.2f}".format(b.melhor_preco_rs).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+                        <td class="text-center">
+                            <span class="badge badge-miles px-3 py-2">
+                                {{ "{:,}".format(b.limite_milhas).replace(',', '.') }} pts
+                            </span>
+                        </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted small fw-bold">
+                        <td colspan="6" class="text-center py-5 text-muted small fw-bold">
                             Nenhuma consulta registrada no histórico.
                         </td>
                     </tr>
