@@ -184,7 +184,6 @@
 <div class="hero-bg">
     <div class="container text-center">
         <div class="btn-top-nav">
-            <!-- NOVO BOTÃO HISTÓRICO -->
             <a href="{{ url_for('historico') }}" class="btn-logout">
                 <i class="bi bi-clock-history me-1"></i> Histórico
             </a>
@@ -271,7 +270,9 @@
             <div class="col-lg-2 col-md-4 col-6">
                 <div class="field-group">
                     <label class="field-label"><i class="bi bi-currency-dollar"></i> Milheiro R$</label>
-                    <input type="number" id="custo_milheiro" step="0.50" class="custom-input" value="{{ filtros.custo_milheiro if filtros else '17.50' }}">
+                    <!-- INTEGRADO: Se não houver simulação na sessão, usa o CPM Real da carteira (cpm_padrao) -->
+                    <input type="number" id="custo_milheiro" step="0.50" class="custom-input" 
+                           value="{{ filtros.custo_milheiro if filtros else '%.2f'|format(cpm_padrao) }}">
                 </div>
             </div>
 

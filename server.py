@@ -79,7 +79,18 @@ def logout():
 @login_required
 def index():
     filtros = session.get('filtros_mymiles')
-    return render_template('index.html', user=current_user, filtros=filtros)
+    
+    # Lógica de Inteligência: Busca o CPM REAL da carteira
+    compras = Aquisicao.query.filter_by(user_id=current_user.id).all()
+    if compras:
+        investimento_total = sum(float(c.valor_pago) for c in compras)
+        saldo_total = sum(c.quantidade for c in compras)
+        # Calcula média ponderada ou usa padrão se saldo for zero
+        cpm_real = (investimento_total / (saldo_total / 1000)) if saldo_total > 0 else 17.50
+    else:
+        cpm_real = 17.50
+        
+    return render_template('index.html', user=current_user, filtros=filtros, cpm_padrao=cpm_real)
 
 @app.route('/api/aeroportos')
 @login_required
@@ -133,7 +144,6 @@ def buscar():
 
     return jsonify({"status": "sucesso", "dados": res})
 
-# --- ROTA HISTÓRICO ---
 @app.route('/historico')
 @login_required
 def historico():
