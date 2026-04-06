@@ -1073,3 +1073,28 @@ Criar o arquivo carteira.html.
 
 Testar a primeira inserção de milhas e ver se o CPM médio aparece na tela.
 
+======
+
+06/04
+
+🚀 Registro de Reinício: Projeto MyMiles
+📍 Ponto de Partida
+Ao retomar, vamos descartar as alterações experimentais de sessão feitas recentemente. O ponto de partida será a versão oficial do 
+seu GitHub.
+
+🎯 Objetivo do "Recomeço do Zero"
+Resolver o problema de perda de dados ao navegar entre telas (Home -> Carteira -> Home), mas fazendo isso de forma limpa sobre o 
+código original.
+
+📋 Checklist para o Retorno:
+Sincronização: Você colará o server.py e o index.html vindos diretamente do GitHub.
+
+Problema a resolver: Implementar a persistência (memória) dos campos de busca (Origem, Destino, Datas, etc.) para que, ao clicar 
+em "Voltar" na Carteira, os dados não sumam da tela principal.
+
+Premissa Inegociável: Manter 100% do layout original e a fidelidade visual que você recuperou do repositório.
+
+Desafio Técnico: Garantir que o autoComplete.js aceite os dados recuperados sem quebrar a lógica de busca por siglas (IATA).
+
+Quando você voltar, basta dizer: "Retomar MyMiles do zero: Versão GitHub". Eu estarei pronto para analisar o código puro e aplicar 
+a solução de forma cirúrgica.

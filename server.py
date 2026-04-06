@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, make_response
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, make_response, session
 import json
 import os
 import csv
@@ -23,7 +23,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login' 
 
 # --- MODELOS DE DADOS ---
-
 class User(UserMixin, db.Model):
     __tablename__ = 'usuarios'
     id = db.Column(db.Integer, primary_key=True)
@@ -56,7 +55,6 @@ def carregar_base_sniper():
 db_aeroportos = carregar_base_sniper()
 
 # --- ROTAS DE AUTENTICAÇÃO ---
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated: return redirect(url_for('index'))
@@ -87,15 +85,17 @@ def cadastro():
 
 @app.route('/logout')
 def logout():
+    session.pop('filtros_mymiles', None) # Limpa busca ao sair
     logout_user()
     return redirect(url_for('login'))
 
 # --- ROTAS DA APLICAÇÃO ---
-
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html', user=current_user)
+    # Recupera os filtros da sessão para devolver ao formulário
+    filtros = session.get('filtros_mymiles')
+    return render_template('index.html', user=current_user, filtros=filtros)
 
 @app.route('/api/aeroportos')
 @login_required
@@ -108,7 +108,20 @@ def api_aeroportos():
 @login_required
 def buscar():
     d = request.json
-    res = buscar_voos_completos(d['origem'].upper(), d['destino'].upper(), d['data_ida'], d['data_volta'], float(d['custo_milheiro']), int(d['pax']), d['classe'])
+    
+    # SALVAR NA SESSÃO: Salvamos o dicionário completo enviado pelo JS
+    # d contém: origem (IATA), origem_nome, destino (IATA), destino_nome, datas, etc.
+    session['filtros_mymiles'] = d
+    
+    res = buscar_voos_completos(
+        d['origem'].upper(), 
+        d['destino'].upper(), 
+        d['data_ida'], 
+        d['data_volta'], 
+        float(d['custo_milheiro']), 
+        int(d['pax']), 
+        d['classe']
+    )
     return jsonify({"status": "sucesso", "dados": res})
 
 # --- ROTA DA CARTEIRA ---
@@ -133,7 +146,6 @@ def carteira():
         return redirect(url_for('carteira'))
 
     compras = Aquisicao.query.filter_by(user_id=current_user.id).all()
-    
     investimento_total = 0.0
     saldo_total = 0
     milhas_processadas = []
@@ -143,7 +155,6 @@ def carteira():
         investimento_total += v_pago
         saldo_total += c.quantidade
         cpm = (v_pago / (c.quantidade / 1000)) if c.quantidade > 0 else 0
-        
         milhas_processadas.append({
             'data': c.data_operacao.strftime('%d/%m/%Y'),
             'programa': c.programa,
@@ -153,24 +164,14 @@ def carteira():
         })
 
     cpm_geral = (investimento_total / (saldo_total / 1000)) if saldo_total > 0 else 0
+    return render_template('carteira.html', user=current_user, milhas=milhas_processadas, investimento=investimento_total, saldo=saldo_total, cpm_geral=cpm_geral)
 
-    return render_template('carteira.html', 
-                           user=current_user, 
-                           milhas=milhas_processadas,
-                           investimento=investimento_total,
-                           saldo=saldo_total,
-                           cpm_geral=cpm_geral)
-
-# --- ROTA DE EXPORTAÇÃO CSV ALTERADA ---
 @app.route('/carteira/exportar')
 @login_required
 def exportar_carteira():
     compras = Aquisicao.query.filter_by(user_id=current_user.id).order_by(Aquisicao.data_operacao.desc()).all()
-    
     output = io.StringIO()
-    # Mantendo o delimitador ';' que você sugeriu para compatibilidade Excel
     writer = csv.writer(output, delimiter=';', quoting=csv.QUOTE_MINIMAL)
-    
     writer.writerow(['Data', 'Programa', 'Quantidade', 'Valor Pago (R$)', 'CPM (R$)'])
     
     for c in compras:
@@ -180,19 +181,15 @@ def exportar_carteira():
             c.data_operacao.strftime('%d/%m/%Y'),
             c.programa,
             c.quantidade,
-            f"{v_pago:.2f}".replace('.', ','), # Formato de moeda BR
+            f"{v_pago:.2f}".replace('.', ','),
             f"{cpm:.2f}".replace('.', ',')
         ])
     
-    # O segredo para o Excel: Adicionar o BOM (Byte Order Mark) UTF-8 no início
     conteudo_csv = "\ufeff" + output.getvalue()
-    
     response = make_response(conteudo_csv)
     filename = f"mymiles_extrato_{datetime.now().strftime('%Y%m%d')}.csv"
-    
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     response.headers["Content-type"] = "text/csv; charset=utf-8"
-    
     return response
 
 if __name__ == '__main__':

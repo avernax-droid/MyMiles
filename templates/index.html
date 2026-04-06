@@ -7,7 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/css/autoComplete.02.min.css">
-    <!-- FONTE PARA EFEITO DE VELOCIDADE -->
     <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@1,700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
@@ -15,7 +14,6 @@
             --primary-dark: #0f172a; 
             --accent-blue: #1d4ed8; 
             --bg-page: #eef2f6; 
-            /* AZUL DE FUNDO MAIS ESCURO E DEFINIDO */
             --bg-search: #cfe2ff; 
             --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
             --result-border: #accbff; 
@@ -39,14 +37,11 @@
             font-family: 'Kanit', sans-serif;
             font-weight: 700; 
             font-style: italic;
-            text-transform: none; 
-            letter-spacing: 1px; 
             transform: skewX(-6deg); 
             font-size: 3.5rem;
             text-shadow: 2px 4px 8px rgba(0,0,0,0.2);
         }
 
-        /* BOTÕES DE NAVEGAÇÃO NO TOPO */
         .btn-top-nav {
             position: absolute;
             top: 20px;
@@ -137,7 +132,6 @@
         .autoComplete_wrapper > ul { 
             z-index: 9999 !important; 
             border-radius: 12px; 
-            border: none; 
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
             padding: 10px;
             background-color: #fff;
@@ -181,10 +175,6 @@
             display: inline-block;
             float: right; 
         }
-        .btn-reservar-small:hover { 
-            background-color: #1e40af !important; 
-            transform: translateY(-1px);
-        }
 
         #loaderArea { display: none; }
     </style>
@@ -193,7 +183,6 @@
 
 <div class="hero-bg">
     <div class="container text-center">
-        <!-- BOTÕES DE NAVEGAÇÃO NO TOPO -->
         <div class="btn-top-nav">
             <a href="{{ url_for('carteira') }}" class="btn-logout">
                 <i class="bi bi-wallet2 me-1"></i> Minha Carteira
@@ -202,19 +191,13 @@
                 <i class="bi bi-box-arrow-right me-1"></i> Sair
             </a>
         </div>
-
         <h1 class="mb-1">MyMiles</h1>
         <p class="opacity-75 small fw-bold">Inteligência em Passagens e Milhas • V2.6.5</p>
-        
-        <!-- SAUDAÇÃO AO USUÁRIO -->
-        {% if user %}
-        <p class="mt-2 small opacity-50">Olá, <strong>{{ user.nome }}</strong></p>
-        {% endif %}
+        {% if user %}<p class="mt-2 small opacity-50">Olá, <strong>{{ user.nome }}</strong></p>{% endif %}
     </div>
 </div>
 
 <div class="container">
-    <!-- ÁREA DE MENSAGENS (ALERTAS) -->
     <div class="row justify-content-center mt-2">
         <div class="col-lg-8">
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -222,7 +205,7 @@
                     {% for category, message in messages %}
                         <div class="alert alert-{{ category }} alert-dismissible fade show small py-2" role="alert">
                             {{ message }}
-                            <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <button type="button" class="btn-close py-2" data-bs-alert="alert"></button>
                         </div>
                     {% endfor %}
                 {% endif %}
@@ -235,28 +218,31 @@
             <div class="col-lg-4 col-md-6">
                 <div class="field-group">
                     <label class="field-label"><i class="bi bi-geo-alt-fill"></i> Origem</label>
-                    <input id="origem" type="text" class="custom-input" placeholder="Cidade ou Aeroporto" autocomplete="off">
+                    <!-- PERSISTÊNCIA: value preenchido pelo Jinja2 -->
+                    <input id="origem" type="text" class="custom-input" placeholder="Cidade ou Aeroporto" autocomplete="off" 
+                           value="{{ filtros.origem_nome if filtros else '' }}">
                 </div>
             </div>
 
             <div class="col-lg-4 col-md-6">
                 <div class="field-group">
                     <label class="field-label"><i class="bi bi-send-fill"></i> Destino</label>
-                    <input id="destino" type="text" class="custom-input" placeholder="Para onde vai?" autocomplete="off">
+                    <input id="destino" type="text" class="custom-input" placeholder="Para onde vai?" autocomplete="off"
+                           value="{{ filtros.destino_nome if filtros else '' }}">
                 </div>
             </div>
 
             <div class="col-lg-2 col-md-6 col-6">
                 <div class="field-group">
                     <label class="field-label"><i class="bi bi-calendar-check"></i> Ida</label>
-                    <input type="date" id="data_ida" class="custom-input">
+                    <input type="date" id="data_ida" class="custom-input" value="{{ filtros.data_ida if filtros else '' }}">
                 </div>
             </div>
 
             <div class="col-lg-2 col-md-6 col-6">
                 <div class="field-group">
                     <label class="field-label"><i class="bi bi-calendar-x"></i> Volta</label>
-                    <input type="date" id="data_volta" class="custom-input">
+                    <input type="date" id="data_volta" class="custom-input" value="{{ filtros.data_volta if filtros else '' }}">
                 </div>
             </div>
         </div>
@@ -266,8 +252,8 @@
                 <div class="field-group">
                     <label class="field-label"><i class="bi bi-star-fill"></i> Classe</label>
                     <select id="classe" class="custom-input">
-                        <option value="ECONOMY">Econômica</option>
-                        <option value="BUSINESS">Executiva</option>
+                        <option value="ECONOMY" {{ 'selected' if filtros and filtros.classe == 'ECONOMY' }}>Econômica</option>
+                        <option value="BUSINESS" {{ 'selected' if filtros and filtros.classe == 'BUSINESS' }}>Executiva</option>
                     </select>
                 </div>
             </div>
@@ -275,14 +261,14 @@
             <div class="col-lg-2 col-md-4 col-6">
                 <div class="field-group">
                     <label class="field-label"><i class="bi bi-people-fill"></i> Passageiros</label>
-                    <input type="number" id="passageiros" value="1" min="1" class="custom-input">
+                    <input type="number" id="passageiros" min="1" class="custom-input" value="{{ filtros.pax if filtros else '1' }}">
                 </div>
             </div>
 
             <div class="col-lg-2 col-md-4 col-6">
                 <div class="field-group">
                     <label class="field-label"><i class="bi bi-currency-dollar"></i> Milheiro R$</label>
-                    <input type="number" id="custo_milheiro" value="17.50" step="0.50" class="custom-input">
+                    <input type="number" id="custo_milheiro" step="0.50" class="custom-input" value="{{ filtros.custo_milheiro if filtros else '17.50' }}">
                 </div>
             </div>
 
@@ -304,11 +290,14 @@
     </div>
 </div>
 
-<!-- Bootstrap JS para funcionar os fechamentos de alertas -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/autoComplete.min.js"></script>
 <script>
-    const selecionados = { origem: "", destino: "" };
+    // PERSISTÊNCIA: Inicializa os selecionados com os dados salvos na sessão (IATA)
+    const selecionados = { 
+        origem: "{{ filtros.origem if filtros else '' }}", 
+        destino: "{{ filtros.destino if filtros else '' }}" 
+    };
 
     const setupAutocomplete = (id) => {
         new autoComplete({
@@ -343,7 +332,7 @@
                         const selection = event.detail.selection.value;
                         const inputField = document.getElementById(id);
                         inputField.value = selection.name; 
-                        selecionados[id] = selection.code;
+                        selecionados[id] = selection.code; // Salva sigla IATA
                         inputField.blur();
                     }
                 }
@@ -364,7 +353,9 @@
 
         const params = {
             origem: getFinalCode('origem'),
+            origem_nome: document.getElementById('origem').value, // Nome completo para salvar na sessão
             destino: getFinalCode('destino'),
+            destino_nome: document.getElementById('destino').value, // Nome completo para salvar na sessão
             data_ida: document.getElementById('data_ida').value,
             data_volta: document.getElementById('data_volta').value,
             classe: document.getElementById('classe').value,
@@ -388,7 +379,6 @@
             if(data.status === "sucesso") {
                 const container = document.getElementById('tabelaResultados');
                 container.innerHTML = "";
-                
                 data.dados.forEach(itin => {
                     const taxa = itin.tipo === "RT" ? 480 : 240;
                     const milheiro_base = params.custo_milheiro || 17.50;
@@ -411,7 +401,6 @@
                                         <span class="flight-info-badge"><i class="bi bi-clock-history me-1"></i>${itin.ida_duracao || '--'}</span>
                                         <span class="flight-info-badge"><i class="bi bi-signpost-split me-1"></i>${itin.ida_paradas || '--'}</span>
                                     </div>
-
                                     ${itin.tipo === "RT" ? `
                                     <div class="pt-3 border-top">
                                         <div class="d-flex justify-content-between align-items-center mb-2">

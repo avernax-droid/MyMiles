@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyMiles - Histórico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@1,700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --primary-dark: #0f172a; 
+            --accent-blue: #1d4ed8; 
+            --bg-page: #eef2f6; 
+            --bg-search: #cfe2ff; 
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            --result-border: #accbff; 
+        }
+
+        body { 
+            background-color: var(--bg-page) !important;
+            font-family: 'Inter', sans-serif; 
+            color: #1e293b;
+        }
+
+        .hero-bg {
+            background: linear-gradient(180deg, #0f172a 0%, #1e40af 60%, #3b82f6 100%);
+            padding: 40px 0 60px 0;
+            color: white;
+            position: relative;
+        }
+
+        .hero-bg h1 {
+            font-family: 'Kanit', sans-serif;
+            font-weight: 700; 
+            font-style: italic;
+            transform: skewX(-6deg); 
+            font-size: 3.5rem;
+            text-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+            margin-bottom: 0;
+        }
+
+        .btn-top-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .btn-nav-item {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-nav-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: white;
+            color: white;
+        }
+
+        .content-card {
+            background: var(--bg-search);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--result-border); 
+            margin-top: 30px;
+        }
+
+        .btn-baixar {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 25px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            /* Garantia de alinhamento manual se necessário */
+            margin-left: auto; 
+        }
+        .btn-baixar:hover {
+            background-color: #059669;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .table {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero-bg text-center">
+    <div class="btn-top-nav">
+        <a href="{{ url_for('index') }}" class="btn-nav-item">
+            <i class="bi bi-arrow-left me-2"></i> VOLTAR
+        </a>
+    </div>
+    <h1>MyMiles</h1>
+    <p class="opacity-75 small fw-bold">Histórico de Auditoria • V2.6.5</p>
+</div>
+
+<div class="container pb-5">
+    <div class="content-card">
+        <!-- Flexbox para alinhar Título à Esquerda e Botão à Direita -->
+        <div class="d-flex justify-content-between align-items-center mb-4 w-100">
+            <h4 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-clock-history me-2 text-primary"></i>Consultas Realizadas
+            </h4>
+            <a href="{{ url_for('exportar_historico') }}" class="btn-baixar">
+                <i class="bi bi-download me-2"></i>BAIXAR
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Trecho</th>
+                        <th>Voo</th>
+                        <th>Cia</th>
+                        <th class="text-end">Preço</th>
+                        <th class="text-end">Milheiro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in buscas %}
+                    <tr>
+                        <td class="small text-muted">{{ b.data_consulta.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <span class="fw-bold">{{ b.origem_iata }}</span>
+                            <i class="bi bi-arrow-right mx-1 text-primary"></i>
+                            <span class="fw-bold">{{ b.destino_iata }}</span>
+                        </td>
+                        <td>{{ b.data_ida.strftime('%d/%m/%Y') }}</td>
+                        <td><span class="badge bg-light text-primary border">{{ b.melhor_cia }}</span></td>
+                        <td class="text-end fw-bold">R$ {{ "{:,.2f}".format(b.melhor_preco_rs).replace('.', ',') }}</td>
+                        <td class="text-end text-muted">R$ {{ "{:,.2f}".format(b.valor_milheiro_usado).replace('.', ',') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted small fw-bold">
+                            Nenhuma consulta registrada no histórico.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
