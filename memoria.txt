@@ -1098,3 +1098,51 @@ Desafio Técnico: Garantir que o autoComplete.js aceite os dados recuperados sem
 
 Quando você voltar, basta dizer: "Retomar MyMiles do zero: Versão GitHub". Eu estarei pronto para analisar o código puro e aplicar 
 a solução de forma cirúrgica.
+
+=====
+06/04
+
+🛠 Relatório de Evolução: MyMiles (Snapshot 2026-04-06)
+1. Arquitetura de Dados & Persistência (Back-end)
+MySQL Oficial: Implementamos a gravação automática na tabela historico_buscas. Cada vez que você clica em VER, o sistema 
+identifica a melhor oferta e salva: IATA, Nomes das Cidades, Preço, Cia, Data da Consulta e o Limite de Milhas calculado.
+
+Inteligência Financeira (CPM Real): Criamos uma ponte entre a "Carteira" e a "Home". Agora, o campo Milheiro R$ não é mais 
+estático (17.50). O server.py calcula a média ponderada das suas aquisicoes reais e preenche o formulário automaticamente.
+
+Exemplo: Com seus dados de teste (R$ 11.600 por 12k milhas), o sistema já abre sugerindo o CPM de R$ 966,67.
+
+Modularização: O código foi refatorado. As classes de banco de dados agora moram no models.py, deixando o server.py focado 
+apenas nas rotas e lógica de busca.
+
+2. Interface e Experiência do Usuário (Front-end)
+Nova Tela de Histórico: Criamos o templates/historico.html com:
+
+Identidade Visual: Tarja de cabeçalho da tabela em Azul Marinho (#1e40af).
+
+Clareza de Trecho: Exibição da Sigla IATA em destaque com o Nome da Cidade logo abaixo.
+
+Status de Voo: Coluna "Tipo" identificando visualmente se a busca foi "Ida e Volta" ou "Somente Ida".
+
+Padronização de Botões (Fiel à Carteira):
+
+Botão BAIXAR: Retangular com cantos levemente arredondados, fundo branco e borda.
+
+Botão VOLTAR: Formato Oval (pílula), fundo branco e borda.
+
+Navegação: Adicionado botão "Histórico" no menu superior da Home.
+
+3. Versionamento (GitHub)
+Último Commit: 1d5fc6a - "feat: integração do CPM real da carteira com o formulário de busca e ajustes de UI".
+
+Estado: Repositório avernax-droid/MyMiles 100% sincronizado e atualizado.
+
+🚀 Pendências para a Próxima Sessão:
+Botão Baixar (Histórico): Implementar a rota de exportação CSV específica para os dados das buscas.
+
+Ação "Refazer": Criar um botão no histórico para carregar os filtros de volta na Home e disparar uma nova pesquisa.
+
+Ajuste de Dados: Lembrar de corrigir as quantidades de milhas na carteira (atualmente muito baixas) para que o CPM médio volte 
+para a casa dos R$ 15,00 ~ R$ 70,00.
+
+Contexto guardado. Bom descanso, Antonio! ✈️🔒

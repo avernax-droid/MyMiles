@@ -39,6 +39,20 @@ def carregar_base_sniper():
 
 db_aeroportos = carregar_base_sniper()
 
+# --- FUNÇÃO AUXILIAR DE LIMPEZA (Garante que o nome não salve IATA duplicada) ---
+def limpar_nome_aeroporto(nome, iata):
+    if not nome: return "---"
+    iata = iata.upper()
+    # Remove duplicatas se o nome vier como "Miami (MIA) (MIA)"
+    padrao_duplo = f"({iata}) ({iata})"
+    if padrao_duplo in nome:
+        nome = nome.replace(padrao_duplo, f"({iata})")
+    
+    # Se já tem a sigla correta, retorna. Se não, adiciona.
+    if f"({iata})" in nome:
+        return nome
+    return f"{nome} ({iata})"
+
 # --- ROTAS DE AUTENTICAÇÃO ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -80,12 +94,10 @@ def logout():
 def index():
     filtros = session.get('filtros_mymiles')
     
-    # Lógica de Inteligência: Busca o CPM REAL da carteira
     compras = Aquisicao.query.filter_by(user_id=current_user.id).all()
     if compras:
         investimento_total = sum(float(c.valor_pago) for c in compras)
         saldo_total = sum(c.quantidade for c in compras)
-        # Calcula média ponderada ou usa padrão se saldo for zero
         cpm_real = (investimento_total / (saldo_total / 1000)) if saldo_total > 0 else 17.50
     else:
         cpm_real = 17.50
@@ -121,12 +133,16 @@ def buscar():
             taxa_estimada = 480 if d['data_volta'] else 240
             limite_calculado = int((float(melhor_voo['valor_sort']) - taxa_estimada) / (float(d['custo_milheiro']) / 1000))
 
+            # Normalização robusta antes de salvar no banco
+            origem_final = limpar_nome_aeroporto(d['origem_nome'], d['origem'])
+            destino_final = limpar_nome_aeroporto(d['destino_nome'], d['destino'])
+
             novo_historico = HistoricoBusca(
                 user_id=current_user.id,
                 origem_iata=d['origem'].upper(),
-                origem_nome=d['origem_nome'],
+                origem_nome=origem_final,
                 destino_iata=d['destino'].upper(),
-                destino_nome=d['destino_nome'],
+                destino_nome=destino_final,
                 data_ida=datetime.strptime(d['data_ida'], '%Y-%m-%d').date(),
                 data_volta=datetime.strptime(d['data_volta'], '%Y-%m-%d').date() if d['data_volta'] else None,
                 classe=d['classe'],
@@ -159,10 +175,14 @@ def exportar_historico():
     writer.writerow(['Data Consulta', 'Origem', 'Destino', 'Data Ida', 'Data Volta', 'Cia', 'Preço (R$)', 'Limite Milhas', 'Milheiro Base'])
     
     for b in buscas:
+        # APLICANDO A LIMPEZA TAMBÉM NA EXPORTAÇÃO (Para limpar dados antigos do banco)
+        origem_csv = limpar_nome_aeroporto(b.origem_nome, b.origem_iata)
+        destino_csv = limpar_nome_aeroporto(b.destino_nome, b.destino_iata)
+
         writer.writerow([
             b.data_consulta.strftime('%d/%m/%Y %H:%M'),
-            f"{b.origem_nome} ({b.origem_iata})",
-            f"{b.destino_nome} ({b.destino_iata})",
+            origem_csv,
+            destino_csv,
             b.data_ida.strftime('%d/%m/%Y'),
             b.data_volta.strftime('%d/%m/%Y') if b.data_volta else '-',
             b.melhor_cia,

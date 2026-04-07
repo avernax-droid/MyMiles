@@ -29,7 +29,6 @@ def processar_dados(itinerarios, pax):
     taxas = obter_cotacoes()
     pax_int = max(1, int(pax))
     
-    # Dicionário para agrupar voos por companhia aérea
     voos_por_cia = {}
 
     print(f"\n--- 🛰️  FILTRANDO {len(itinerarios)} ITINERÁRIOS (TOP 2 POR CIA) ---")
@@ -42,6 +41,24 @@ def processar_dados(itinerarios, pax):
             v_volta = item.get('inboundFlight', {})
             cia_nome = v_ida.get('carrierName', 'Desconhecida')
 
+            # --- LÓGICA DE MONTAGEM DE ORIGEM/DESTINO (ROBUSTA) ---
+            def formatar_local(voo_perna, tipo="departure"):
+                iata = voo_perna.get(f'{tipo}AirportCode', '').upper()
+                nome_raw = voo_perna.get(f'{tipo}AirportName', '---')
+                
+                # Se a sigla aparece duplicada (ex: "Miami (MIA) (MIA)"), limpa para apenas uma
+                padrao_duplo = f"({iata}) ({iata})"
+                if padrao_duplo in nome_raw:
+                    nome_raw = nome_raw.replace(padrao_duplo, f"({iata})")
+                
+                # Se o nome não tem a sigla, adiciona. Se já tem (uma vez), mantém.
+                if iata and f"({iata})" not in nome_raw:
+                    return f"{nome_raw} ({iata})"
+                return nome_raw
+
+            origem_fmt = formatar_local(v_ida, "departure")
+            destino_fmt = formatar_local(v_ida, "arrival")
+
             # 1. Cálculos de Preço e Moeda
             moeda = item.get('currencyCode', 'USD')
             valor_raw = float(item.get('bestPrice', 0))
@@ -51,7 +68,7 @@ def processar_dados(itinerarios, pax):
             preco_total_brl = valor_raw * cotacao
             preco_por_pessoa = preco_total_brl / pax_int
 
-            # 2. Funções Auxiliares de Formatação (Extração de Datas e Horas)
+            # 2. Funções Auxiliares de Formatação
             def extrair_data(f):
                 if not f: return "---"
                 dt = f.get('departureDateTime') or f.get('segments', [{}])[0].get('departureDateTime', {})
@@ -83,6 +100,8 @@ def processar_dados(itinerarios, pax):
                 "valor_sort": preco_por_pessoa,
                 "valor_total_reserva": preco_total_brl,
                 "pax_count": pax_int,
+                "origem": origem_fmt,
+                "destino": destino_fmt,
                 "tipo": "RT" if (v_volta and v_volta.get('carrierName')) else "OW",
                 "cia": cia_nome,
                 "ida_data": extrair_data(v_ida),
@@ -96,7 +115,6 @@ def processar_dados(itinerarios, pax):
                 "link": item.get('bookingLink')
             }
 
-            # 3. Lógica de Agrupamento: Adiciona à lista da CIA correspondente
             if cia_nome not in voos_por_cia:
                 voos_por_cia[cia_nome] = []
             voos_por_cia[cia_nome].append(voo_processado)
@@ -108,17 +126,14 @@ def processar_dados(itinerarios, pax):
     # 4. Seleção dos Top 2 de cada CIA e Print de Auditoria
     resultados_finais = []
     for cia, lista_voos in voos_por_cia.items():
-        # Ordena os voos desta CIA por preço e pega os 2 primeiros
         top_da_cia = sorted(lista_voos, key=lambda x: x['valor_sort'])[:2]
         
         for v in top_da_cia:
-            print(f"✈️  [AUDITORIA] {v['cia']} | R$ {v['valor_sort']:,.2f} | Ida: {v['ida_duracao']} ({v['ida_paradas']})")
+            print(f"✈️  [AUDITORIA] {v['cia']} | {v['origem']} -> {v['destino']} | R$ {v['valor_sort']:,.2f}")
             resultados_finais.append(v)
 
-    # Ordenação final de todos os resultados pelo preço (Sniper)
     ordenados = sorted(resultados_finais, key=lambda x: x['valor_sort'])
     
-    # Formatação final de moeda para o HTML
     for r in ordenados:
         r['preco_fmt'] = f"R$ {r['valor_sort']:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
         r['preco_total_fmt'] = f"R$ {r['valor_total_reserva']:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -136,7 +151,6 @@ def buscar_voos_completos(origem, destino, data_ida, data_volta, custo_milheiro,
     
     url_poll = f"https://sky-api-778236310566.us-central1.run.app/search/poll/{token}"
     
-    # Realiza até 15 tentativas para obter os dados completos
     for i in range(15):
         try:
             res = requests.get(url_poll, headers=HEADERS_AUDITORIA, timeout=15)
