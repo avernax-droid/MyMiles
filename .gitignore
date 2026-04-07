@@ -1,22 +1,43 @@
-# Ambiente Virtual e Cache
+# --- Ambiente Virtual e Cache ---
 venv/
+.venv/
+env/
 __pycache__/
 *.pyc
+.pytest_cache/
 
-# Configurações e Segredos
+# --- Configurações e Segredos (CRÍTICO) ---
 .env
+instance/
 .auth/
 user_data/
+.vscode/
+.idea/
 
-# Arquivos Binários e Instaladores (Importante para evitar o erro de 100MB)
+# --- Banco de Dados e Dados Locais ---
+# Se você usa SQLite para testes, ignore o .db
+*.db
+*.sqlite
+# Logs e arquivos de auditoria
+*.log
+mymiles_sniper.log
+memoria.txt
+taxas_temp.json
+
+# --- Arquivos Binários e Instaladores (>100MB) ---
 *.deb
 *.exe
 *.msi
 *.zip
 *.tar.gz
+*.7z
 
-# Logs do Playwright/Navegador
+# --- Playwright / Automação ---
 test-results/
 playwright-report/
 blob-report/
-memoria.txt
+playwright/.local-browsers/
+
+# --- Sistema Operacional ---
+.DS_Store
+Thumbs.db

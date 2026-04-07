@@ -128,7 +128,8 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <a href="{{ url_for('index') }}" class="logo-small">MyMiles</a>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('exportar_carteira') }}" class="btn-export">
+            <!-- AJUSTADO: Namespace do Blueprint -->
+            <a href="{{ url_for('carteira.exportar') }}" class="btn-export">
                 <i class="bi bi-download me-1"></i> BAIXAR
             </a>
             <a href="{{ url_for('index') }}" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold">VOLTAR</a>
@@ -160,7 +161,8 @@
     <!-- FORMULÁRIO DE NOVA ENTRADA -->
     <div class="carteira-card mb-5">
         <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-plus-circle-fill me-2"></i>NOVA ENTRADA</h6>
-        <form action="{{ url_for('carteira') }}" method="POST">
+        <!-- AJUSTADO: Namespace do Blueprint -->
+        <form action="{{ url_for('carteira.index') }}" method="POST">
             <div class="row g-3 align-items-end">
                 <div class="col-md-2">
                     <label class="field-label">Data</label>
@@ -219,7 +221,8 @@
                                     onclick="abrirEdicao('{{ m.id }}', '{{ m.data_raw }}', '{{ m.programa }}', '{{ m.quantidade }}', '{{ m.valor_pago }}')">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
-                            <form action="{{ url_for('deletar_aquisicao', id=m.id) }}" method="POST" onsubmit="return confirm('Excluir esta entrada?')">
+                            <!-- AJUSTADO: Namespace do Blueprint -->
+                            <form action="{{ url_for('carteira.deletar', id=m.id) }}" method="POST" onsubmit="return confirm('Excluir esta entrada?')">
                                 <button type="submit" class="btn btn-sm btn-outline-danger border-0">
                                     <i class="bi bi-trash3"></i>
                                 </button>
@@ -281,16 +284,13 @@
 <script>
     // --- 1. INICIALIZAÇÃO DE CAMPOS ---
     window.addEventListener('load', () => {
-        // Data atual
         const inputData = document.getElementById('data_hoje');
         const hoje = new Date().toISOString().split('T')[0];
         inputData.value = hoje;
 
-        // Quantidade inicial 0
         const inputQtd = document.getElementById('input_qtd');
         inputQtd.value = 0;
         
-        // Valor Inicial R$ 0,00
         const inputValor = document.getElementById('input_valor');
         inputValor.value = "R$ 0,00";
     });
@@ -315,6 +315,7 @@
     const instModal = new bootstrap.Modal(document.getElementById('modalEdicao'));
 
     function abrirEdicao(id, data, programa, qtd, valor) {
+        // AJUSTADO: Namespace do Blueprint no path
         document.getElementById('formEdicao').action = `/carteira/editar/${id}`;
         document.getElementById('edit_data').value = data;
         document.getElementById('edit_programa').value = programa;

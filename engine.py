@@ -1,6 +1,7 @@
 import requests
 import time
 from scraper import obter_token_sessao 
+import parser  # Importando o novo módulo especializado
 
 # Configuração de Headers para simular navegador real na API de Poll
 HEADERS_AUDITORIA = {
@@ -41,23 +42,12 @@ def processar_dados(itinerarios, pax):
             v_volta = item.get('inboundFlight', {})
             cia_nome = v_ida.get('carrierName', 'Desconhecida')
 
-            # --- LÓGICA DE MONTAGEM DE ORIGEM/DESTINO (ROBUSTA) ---
-            def formatar_local(voo_perna, tipo="departure"):
-                iata = voo_perna.get(f'{tipo}AirportCode', '').upper()
-                nome_raw = voo_perna.get(f'{tipo}AirportName', '---')
-                
-                # Se a sigla aparece duplicada (ex: "Miami (MIA) (MIA)"), limpa para apenas uma
-                padrao_duplo = f"({iata}) ({iata})"
-                if padrao_duplo in nome_raw:
-                    nome_raw = nome_raw.replace(padrao_duplo, f"({iata})")
-                
-                # Se o nome não tem a sigla, adiciona. Se já tem (uma vez), mantém.
-                if iata and f"({iata})" not in nome_raw:
-                    return f"{nome_raw} ({iata})"
-                return nome_raw
+            # --- CHAMADAS AO MÓDULO PARSER (Lógica delegada) ---
+            origem_fmt = parser.formatar_local(v_ida, "departure")
+            destino_fmt = parser.formatar_local(v_ida, "arrival")
 
-            origem_fmt = formatar_local(v_ida, "departure")
-            destino_fmt = formatar_local(v_ida, "arrival")
+            dur_ida, stop_ida = parser.extrair_duracao_paradas(v_ida)
+            dur_volta, stop_volta = parser.extrair_duracao_paradas(v_volta)
 
             # 1. Cálculos de Preço e Moeda
             moeda = item.get('currencyCode', 'USD')
@@ -68,34 +58,7 @@ def processar_dados(itinerarios, pax):
             preco_total_brl = valor_raw * cotacao
             preco_por_pessoa = preco_total_brl / pax_int
 
-            # 2. Funções Auxiliares de Formatação
-            def extrair_data(f):
-                if not f: return "---"
-                dt = f.get('departureDateTime') or f.get('segments', [{}])[0].get('departureDateTime', {})
-                if not dt: return "---"
-                return f"{dt.get('day', 0):02d}/{dt.get('month', 0):02d}/{dt.get('year')}"
-
-            def extrair_hora_fuso(f):
-                if not f: return "---"
-                dt = f.get('departureDateTime') or f.get('segments', [{}])[0].get('departureDateTime', {})
-                if not dt: return "---"
-                hora = f"{dt.get('hour', 0):02d}:{dt.get('minute', 0):02d}"
-                offset = dt.get('offset')
-                fuso = f" (UTC{'+' if offset >= 0 else ''}{offset})" if offset is not None else ""
-                return f"{hora}{fuso}"
-
-            def extrair_duracao_paradas(f):
-                if not f: return "---", "Direto"
-                mins = f.get('durationMinutes') or 0
-                stops = f.get('stopsCount', 0)
-                duracao = f"{mins // 60}h {mins % 60}m"
-                label = f"{stops} Parada(s)" if stops > 0 else "Direto"
-                return duracao, label
-
-            dur_ida, stop_ida = extrair_duracao_paradas(v_ida)
-            dur_volta, stop_volta = extrair_duracao_paradas(v_volta)
-
-            # Montagem do objeto de voo
+            # Montagem do objeto de voo usando as funções do parser
             voo_processado = {
                 "valor_sort": preco_por_pessoa,
                 "valor_total_reserva": preco_total_brl,
@@ -104,12 +67,12 @@ def processar_dados(itinerarios, pax):
                 "destino": destino_fmt,
                 "tipo": "RT" if (v_volta and v_volta.get('carrierName')) else "OW",
                 "cia": cia_nome,
-                "ida_data": extrair_data(v_ida),
-                "ida_hora": extrair_hora_fuso(v_ida),
+                "ida_data": parser.extrair_data(v_ida),
+                "ida_hora": parser.extrair_hora_fuso(v_ida),
                 "ida_duracao": dur_ida,
                 "ida_paradas": stop_ida,
-                "volta_data": extrair_data(v_volta),
-                "volta_hora": extrair_hora_fuso(v_volta),
+                "volta_data": parser.extrair_data(v_volta),
+                "volta_hora": parser.extrair_hora_fuso(v_volta),
                 "volta_duracao": dur_volta,
                 "volta_paradas": stop_volta,
                 "link": item.get('bookingLink')
@@ -123,7 +86,7 @@ def processar_dados(itinerarios, pax):
             print(f"⚠️ [ENGINE] Erro ao processar item: {e}")
             continue
 
-    # 4. Seleção dos Top 2 de cada CIA e Print de Auditoria
+    # 4. Seleção dos Top 2 de cada CIA
     resultados_finais = []
     for cia, lista_voos in voos_por_cia.items():
         top_da_cia = sorted(lista_voos, key=lambda x: x['valor_sort'])[:2]

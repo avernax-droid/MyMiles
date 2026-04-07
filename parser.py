@@ -1,69 +1,43 @@
-import json
+# parser.py
 import re
 
-def extrair_voos_latam(caminho_arquivo):
-    """Lê os dados a partir de um arquivo JSON estruturado."""
-    try:
-        with open(caminho_arquivo, 'r', encoding='utf-8') as f:
-            dados = json.load(f)
-        
-        voos_processados = []
-        
-        # Navega na estrutura do JSON da LATAM
-        for item in dados.get('content', []):
-            summary = item.get('summary', {})
-            origem = summary.get('origin', {}).get('iataCode')
-            destino = summary.get('destination', {}).get('iataCode')
-            voo_numero = summary.get('flightCode')
-            
-            # Pega o preço da primeira marca (geralmente a mais barata)
-            brands = summary.get('brands', [])
-            if brands:
-                primeira_oferta = brands[0]
-                valor_milhas = primeira_oferta.get('price', {}).get('amount')
-                taxas = primeira_oferta.get('taxes', {}).get('amount')
-                
-                voos_processados.append({
-                    "voo": voo_numero,
-                    "origem": origem,
-                    "destino": destino,
-                    "milhas": valor_milhas,
-                    "taxas": taxas
-                })
-                
-        return voos_processados
-    except Exception as e:
-        print(f"Erro ao ler JSON: {e}")
-        return []
-
-def extrair_voos_texto_bruto(texto_bruto):
-    """Lê os dados a partir do texto copiado da tela (Regex)."""
-    # Regex para capturar: Horário, Origem, Duração, Chegada, Destino, Milhas e Taxas
-    padrao = re.compile(
-        r"(\d{1,2}:\d{2})\n([A-Z]{3})\nDuração\n([\d\s\w]+min\.)\n"
-        r"(\d{1,2}:\d{2}.*?)\n([A-Z]{3})\n"
-        r".*?([\d.]+)\smilhas\n\+\sBRL\s([\d,.]+)", 
-        re.DOTALL
-    )
+def formatar_local(voo_perna, tipo="departure"):
+    """Padroniza e limpa o nome do aeroporto e IATA."""
+    iata = voo_perna.get(f'{tipo}AirportCode', '').upper()
+    nome_raw = voo_perna.get(f'{tipo}AirportName', '---')
     
-    matches = padrao.findall(texto_bruto)
-    resultados = []
+    # Limpeza de siglas duplicadas: "Miami (MIA) (MIA)" -> "Miami (MIA)"
+    padrao_duplo = f"({iata}) ({iata})"
+    if padrao_duplo in nome_raw:
+        nome_raw = nome_raw.replace(padrao_duplo, f"({iata})")
     
-    for m in matches:
-        resultados.append({
-            "saida": m[0],
-            "origem": m[1],
-            "duracao": m[2].strip(),
-            "chegada": m[3].strip(),
-            "destino": m[4],
-            "milhas": int(m[5].replace('.', '')),
-            "taxas": float(m[6].replace(',', '.'))
-        })
-    return resultados
+    # Garante que o IATA esteja no final se não estiver presente
+    if iata and f"({iata})" not in nome_raw:
+        return f"{nome_raw} ({iata})"
+    return nome_raw
 
-# Exemplo de uso
-if __name__ == "__main__":
-    # Para testar o JSON:
-    # lista = extrair_voos_latam('dados_latam.json')
-    # print(lista)
-    pass
+def extrair_data(f):
+    """Extrai a data no formato DD/MM/AAAA."""
+    if not f: return "---"
+    dt = f.get('departureDateTime') or f.get('segments', [{}])[0].get('departureDateTime', {})
+    if not dt: return "---"
+    return f"{dt.get('day', 0):02d}/{dt.get('month', 0):02d}/{dt.get('year')}"
+
+def extrair_hora_fuso(f):
+    """Extrai horário e fuso (Ex: 14:30 (UTC-3))."""
+    if not f: return "---"
+    dt = f.get('departureDateTime') or f.get('segments', [{}])[0].get('departureDateTime', {})
+    if not dt: return "---"
+    hora = f"{dt.get('hour', 0):02d}:{dt.get('minute', 0):02d}"
+    offset = dt.get('offset')
+    fuso = f" (UTC{'+' if offset >= 0 else ''}{offset})" if offset is not None else ""
+    return f"{hora}{fuso}"
+
+def extrair_duracao_paradas(f):
+    """Retorna a duração formatada e o selo de paradas."""
+    if not f: return "---", "Direto"
+    mins = f.get('durationMinutes') or 0
+    stops = f.get('stopsCount', 0)
+    duracao = f"{mins // 60}h {mins % 60}m"
+    label = f"{stops} Parada(s)" if stops > 0 else "Direto"
+    return duracao, label

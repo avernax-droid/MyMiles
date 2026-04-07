@@ -187,7 +187,8 @@
             <a href="{{ url_for('historico') }}" class="btn-logout">
                 <i class="bi bi-clock-history me-1"></i> Histórico
             </a>
-            <a href="{{ url_for('carteira') }}" class="btn-logout">
+            <!-- AJUSTE AQUI: Alterado de 'carteira' para 'carteira.index' -->
+            <a href="{{ url_for('carteira.index') }}" class="btn-logout">
                 <i class="bi bi-wallet2 me-1"></i> Minha Carteira
             </a>
             <a href="{{ url_for('logout') }}" class="btn-logout">
@@ -270,7 +271,6 @@
             <div class="col-lg-2 col-md-4 col-6">
                 <div class="field-group">
                     <label class="field-label"><i class="bi bi-currency-dollar"></i> Milheiro R$</label>
-                    <!-- INTEGRADO: Se não houver simulação na sessão, usa o CPM Real da carteira (cpm_padrao) -->
                     <input type="number" id="custo_milheiro" step="0.50" class="custom-input" 
                            value="{{ filtros.custo_milheiro if filtros else '%.2f'|format(cpm_padrao) }}">
                 </div>
@@ -424,7 +424,7 @@
                                 <div class="col-md-2 text-center mt-3 mt-md-0">
                                     <div class="small text-muted mb-2 fw-bold text-uppercase">Limite p/ Milhas</div>
                                     <div class="points-badge mb-3">${teto.toLocaleString('pt-BR')} pts</div>
-                                    <a href="${itin.link}" target="_blank" class="btn-reservar-small">RESERVAR</a>
+                                    <a href="${itin.link}" target="_blank" rel="noopener noreferrer" class="btn-reservar-small">RESERVAR</a>
                                 </div>
                             </div>
                         </div>`;
