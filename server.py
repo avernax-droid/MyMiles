@@ -7,7 +7,7 @@ from datetime import datetime
 
 # Módulos do Projeto
 from engine import buscar_voos_completos
-from models import db, User, Aquisicao, HistoricoBusca
+from models import db, User, Carteira, HistoricoBusca
 from utils.helpers import carregar_base_sniper, limpar_nome_aeroporto, converter_moeda_para_float
 
 # Importação do Blueprint
@@ -79,7 +79,7 @@ def logout():
 @login_required
 def index():
     filtros = session.get('filtros_mymiles')
-    compras = Aquisicao.query.filter_by(user_id=current_user.id).all()
+    compras = Carteira.query.filter_by(user_id=current_user.id).all()
     if compras:
         investimento_total = sum(float(c.valor_pago) for c in compras)
         saldo_total = sum(c.quantidade for c in compras)

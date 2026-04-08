@@ -11,8 +11,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
 
-class Aquisicao(db.Model):
-    __tablename__ = 'aquisicoes'
+class Carteira(db.Model):
+    __tablename__ = 'carteira'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     programa = db.Column(db.String(50), nullable=False)

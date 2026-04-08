@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from datetime import datetime
 import csv
 import io
-from models import db, Aquisicao
+from models import db, Carteira
 from flask_login import login_required, current_user
 from utils.helpers import converter_moeda_para_float
 
@@ -30,7 +30,7 @@ def index():
             flash(f"Erro: {e}", "danger")
         return redirect(url_for('carteira.index'))
 
-    compras = Aquisicao.query.filter_by(user_id=current_user.id).order_by(Aquisicao.data_operacao.asc()).all()
+    compras = Carteira.query.filter_by(user_id=current_user.id).order_by(Carteira.data_operacao.asc()).all()
     investimento_total = sum(float(c.valor_pago) for c in compras)
     saldo_total = sum(c.quantidade for c in compras)
     
@@ -54,7 +54,7 @@ def index():
 @carteira_bp.route('/carteira/editar/<int:id>', methods=['POST'])
 @login_required
 def editar(id):
-    item = Aquisicao.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    item = Carteira.query.filter_by(id=id, user_id=current_user.id).first_or_404()
     try:
         valor_final = converter_moeda_para_float(request.form.get('valor_pago'))
         item.programa = request.form.get('programa')
