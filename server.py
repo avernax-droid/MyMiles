@@ -4,11 +4,17 @@ import os
 import csv
 import io
 from datetime import datetime
+from sqlalchemy import func # Importado para cálculos agregados no SQL
 
 # Módulos do Projeto
 from engine import buscar_voos_completos
 from models import db, User, Carteira, HistoricoBusca
-from utils.helpers import carregar_base_sniper, limpar_nome_aeroporto, converter_moeda_para_float
+from utils.helpers import (
+    carregar_base_sniper, 
+    limpar_nome_aeroporto, 
+    converter_moeda_para_float,
+    identificar_programa_fidelidade # Nova função adicionada no helpers.py
+)
 
 # Importação do Blueprint
 from routes.carteira import carteira_bp
@@ -38,6 +44,26 @@ def load_user(user_id):
 
 # --- CARREGAMENTO DE DADOS INICIAIS ---
 db_aeroportos = carregar_base_sniper('aeroportos_sniper.json')
+
+# --- FUNÇÕES DE INTELIGÊNCIA DE DADOS (V2.7.1) ---
+def obter_resumo_carteira_usuario(user_id):
+    """Consolida saldos e calcula o CPM Médio por programa."""
+    saldos = db.session.query(
+        Carteira.programa,
+        func.sum(Carteira.quantidade).label('total_qtd'),
+        func.sum(Carteira.valor_pago).label('total_valor')
+    ).filter_by(user_id=user_id).group_by(Carteira.programa).all()
+
+    resumo = {}
+    for s in saldos:
+        qtd = float(s.total_qtd)
+        valor = float(s.total_valor)
+        cpm = (valor / (qtd / 1000)) if qtd > 0 else 0
+        resumo[s.programa] = {
+            'saldo': qtd,
+            'cpm': round(cpm, 2)
+        }
+    return resumo
 
 # --- ROTAS DE AUTENTICAÇÃO ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -80,13 +106,15 @@ def logout():
 def index():
     filtros = session.get('filtros_mymiles')
     compras = Carteira.query.filter_by(user_id=current_user.id).all()
+    
     if compras:
         investimento_total = sum(float(c.valor_pago) for c in compras)
         saldo_total = sum(c.quantidade for c in compras)
         cpm_real = (investimento_total / (saldo_total / 1000)) if saldo_total > 0 else 17.50
     else:
         cpm_real = 17.50
-    return render_template('index.html', user=current_user, filtros=filtros, cpm_padrao=cpm_real)
+        
+    return render_template('index.html', user=current_user, filtros=filtros, cpm_padrao=round(cpm_real, 2))
 
 @app.route('/api/aeroportos')
 @login_required
@@ -100,20 +128,39 @@ def api_aeroportos():
 def buscar():
     d = request.json
     session['filtros_mymiles'] = d
+    
+    # 1. Executa a busca SNIPER no Engine
     res = buscar_voos_completos(d['origem'].upper(), d['destino'].upper(), d['data_ida'], d['data_volta'], float(d['custo_milheiro']), int(d['pax']), d['classe'])
     
+    # 2. Obtém a carteira consolidada do usuário para comparação
+    minha_carteira = obter_resumo_carteira_usuario(current_user.id)
+    
+    # 3. Inteligência de Cruzamento: Anexa informações da carteira a cada voo encontrado
+    if res:
+        for voo in res:
+            # Identifica qual programa nacional atende essa CIA (Ex: ITA -> Smiles)
+            prog_sugerido = identificar_programa_fidelidade(voo['cia'])
+            voo['programa_sugerido'] = prog_sugerido
+            
+            # Se houver programa sugerido, anexa saldo e CPM real da carteira
+            if prog_sugerido and prog_sugerido in minha_carteira:
+                voo['carteira_info'] = minha_carteira[prog_sugerido]
+            else:
+                voo['carteira_info'] = None
+
+    # --- Salvamento no Histórico ---
     if res and len(res) > 0:
         try:
             melhor_voo = res[0]
             taxa_estimada = 480 if d['data_volta'] else 240
             limite_calculado = int((float(melhor_voo['valor_sort']) - taxa_estimada) / (float(d['custo_milheiro']) / 1000))
             
-            origem_final = limpar_nome_aeroporto(d['origem_nome'], d['origem'])
-            destino_final = limpar_nome_aeroporto(d['destino_nome'], d['destino'])
-            
             novo_historico = HistoricoBusca(
-                user_id=current_user.id, origem_iata=d['origem'].upper(), origem_nome=origem_final,
-                destino_iata=d['destino'].upper(), destino_nome=destino_final,
+                user_id=current_user.id, 
+                origem_iata=d['origem'].upper(), 
+                origem_nome=limpar_nome_aeroporto(d['origem_nome'], d['origem']),
+                destino_iata=d['destino'].upper(), 
+                destino_nome=limpar_nome_aeroporto(d['destino_nome'], d['destino']),
                 data_ida=datetime.strptime(d['data_ida'], '%Y-%m-%d').date(),
                 data_volta=datetime.strptime(d['data_volta'], '%Y-%m-%d').date() if d['data_volta'] else None,
                 classe=d['classe'], pax=int(d['pax']), melhor_cia=melhor_voo['cia'],
@@ -126,7 +173,12 @@ def buscar():
             db.session.rollback()
             print(f"Erro ao salvar histórico: {e}")
             
-    return jsonify({"status": "sucesso", "dados": res})
+    # Retornamos os dados + o resumo da carteira para o Front-end
+    return jsonify({
+        "status": "sucesso", 
+        "dados": res, 
+        "resumo_carteira": minha_carteira
+    })
 
 @app.route('/historico')
 @login_required

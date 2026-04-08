@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyMiles - V2.6.5</title>
+    <title>MyMiles - V2.7.2</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/css/autoComplete.02.min.css">
@@ -138,19 +138,32 @@
         }
 
         .flight-card { 
-            background: var(--bg-search); 
+            background: #ffffff; 
             border-radius: 14px; 
             border: 1px solid var(--result-border); 
             transition: transform 0.2s; 
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
         }
-        .flight-card:hover { transform: scale(1.01); }
+        .flight-card:hover { transform: scale(1.005); border-color: var(--accent-blue); }
         
         .price-tag { color: #0f172a; font-size: 1.5rem; font-weight: 800; }
         .points-badge { background: #dcfce7; color: #166534; padding: 8px 16px; border-radius: 10px; font-weight: 800; display: inline-block; border: 1px solid #bbf7d0; }
         
+        .wallet-badge { background: #f1f5f9; color: #475569; padding: 10px; border-radius: 10px; border: 1px dashed #cbd5e1; display: block; margin-top: 10px; }
+        .wallet-value { color: #1e40af; font-weight: 800; font-size: 1rem; }
+        .wallet-cpm { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        
+        /* Ajustes Calculadora REVISADOS V2.7.2 */
+        .calculator-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-top: 10px; text-align: left; }
+        .calc-input { font-size: 0.85rem !important; font-weight: 700 !important; border: 1px solid #cbd5e1 !important; height: 32px !important; margin-bottom: 8px; }
+        
+        /* Forçando a quebra de linha com display block */
+        .economy-positive { color: #16a34a; font-weight: 800; display: block !important; width: 100%; margin-top: 5px; }
+        .economy-negative { color: #dc2626; font-weight: 800; display: block !important; width: 100%; margin-top: 5px; }
+        .lack-balance { color: #ea580c; font-size: 0.7rem; font-weight: 700; margin-top: 4px; display: block !important; }
+
         .flight-info-badge { 
-            background: rgba(255,255,255,0.6); 
+            background: rgba(241, 245, 249, 0.8); 
             color: #475569; 
             font-size: 0.75rem; 
             font-weight: 600; 
@@ -159,7 +172,7 @@
             margin-right: 6px; 
             display: inline-flex; 
             align-items: center; 
-            border: 1px solid rgba(187, 217, 251, 0.8); 
+            border: 1px solid #e2e8f0; 
         }
         
         .btn-reservar-small { 
@@ -187,7 +200,6 @@
             <a href="{{ url_for('historico') }}" class="btn-logout">
                 <i class="bi bi-clock-history me-1"></i> Histórico
             </a>
-            <!-- AJUSTE AQUI: Alterado de 'carteira' para 'carteira.index' -->
             <a href="{{ url_for('carteira.index') }}" class="btn-logout">
                 <i class="bi bi-wallet2 me-1"></i> Minha Carteira
             </a>
@@ -196,7 +208,7 @@
             </a>
         </div>
         <h1 class="mb-1">MyMiles</h1>
-        <p class="opacity-75 small fw-bold">Inteligência em Passagens e Milhas • V2.6.5</p>
+        <p class="opacity-75 small fw-bold">Inteligência em Passagens e Milhas • V2.7.2</p>
         {% if user %}<p class="mt-2 small opacity-50">Olá, <strong>{{ user.nome }}</strong></p>{% endif %}
     </div>
 </div>
@@ -209,7 +221,7 @@
                     {% for category, message in messages %}
                         <div class="alert alert-{{ category }} alert-dismissible fade show small py-2" role="alert">
                             {{ message }}
-                            <button type="button" class="btn-close py-2" data-bs-alert="alert"></button>
+                            <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
                         </div>
                     {% endfor %}
                 {% endif %}
@@ -346,6 +358,37 @@
     setupAutocomplete("origem");
     setupAutocomplete("destino");
 
+    function calcularEconomiaReal(idInput, precoDinheiro, cpm, saldo) {
+        const input = document.getElementById(idInput);
+        const resDiv = document.getElementById('res_' + idInput);
+        const valorDigitado = parseFloat(input.value) || 0;
+
+        if (valorDigitado <= 0) {
+            resDiv.innerHTML = "";
+            return;
+        }
+
+        const taxaEmbarque = 240; 
+        const custoMilhasReais = (valorDigitado * (cpm / 1000)) + taxaEmbarque;
+        const economia = precoDinheiro - custoMilhasReais;
+        
+        // CORREÇÃO: Estrutura HTML com divs block para forçar quebra
+        let html = `<div class="mt-2 pt-2 border-top">`;
+        html += `<div class="small fw-bold text-muted">Resultado:</div>`;
+        html += `<div class="${economia > 0 ? 'economy-positive' : 'economy-negative'}">`;
+        html += `Economia Real: R$ ${economia.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>`;
+        
+        if (valorDigitado > saldo) {
+            const falta = valorDigitado - saldo;
+            html += `<div class="lack-balance"><i class="bi bi-exclamation-triangle-fill"></i> Faltam ${falta.toLocaleString('pt-BR')} pts</div>`;
+        } else {
+            html += `<div class="text-success small mt-1" style="font-size: 0.65rem; font-weight: 700;">✅ Saldo Suficiente</div>`;
+        }
+        html += `</div>`;
+
+        resDiv.innerHTML = html;
+    }
+
     async function executarBusca() {
         const getFinalCode = (id) => {
             if (selecionados[id]) return selecionados[id];
@@ -382,13 +425,39 @@
             if(data.status === "sucesso") {
                 const container = document.getElementById('tabelaResultados');
                 container.innerHTML = "";
-                data.dados.forEach(itin => {
+                
+                data.dados.forEach((itin, index) => {
                     const taxa = itin.tipo === "RT" ? 480 : 240;
                     const milheiro_base = params.custo_milheiro || 17.50;
                     const teto = Math.floor((itin.valor_sort - taxa) / (milheiro_base / 1000));
                     
+                    const idInput = `calc_milhas_${index}`;
+                    const cpmFinal = itin.carteira_info ? itin.carteira_info.cpm : params.custo_milheiro;
+                    const saldoFinal = itin.carteira_info ? itin.carteira_info.saldo : 0;
+
+                    let htmlCarteira = "";
+                    if (itin.carteira_info) {
+                        const info = itin.carteira_info;
+                        htmlCarteira = `
+                            <div class="wallet-badge">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small fw-bold text-muted"><i class="bi bi-wallet2 me-1"></i> ${itin.programa_sugerido}</span>
+                                    <span class="wallet-cpm">CPM: R$ ${info.cpm.toFixed(2)}</span>
+                                </div>
+                                <div class="wallet-value">${info.saldo.toLocaleString('pt-BR')} pts</div>
+                            </div>
+                        `;
+                    } else if (itin.programa_sugerido) {
+                        htmlCarteira = `
+                            <div class="wallet-badge" style="opacity: 0.6">
+                                <div class="small fw-bold text-muted">${itin.programa_sugerido}</div>
+                                <div class="small text-danger">Sem milhas em carteira</div>
+                            </div>
+                        `;
+                    }
+
                     container.innerHTML += `
-                        <div class="flight-card p-4 mb-3 shadow-sm border-0">
+                        <div class="flight-card p-4 mb-3">
                             <div class="row align-items-center">
                                 <div class="col-md-2 text-center border-end mb-3 mb-md-0">
                                     <div class="text-uppercase small fw-bold text-muted mb-1">${itin.cia}</div>
@@ -419,19 +488,33 @@
                                 </div>
                                 <div class="col-md-3 text-center text-md-end pe-md-5 border-start">
                                     <div class="small text-muted fw-bold text-uppercase">Dinheiro c/ Taxas</div>
-                                    <div class="price-tag mb-2">${itin.preco_fmt}</div>
+                                    <div class="price-tag mb-1">${itin.preco_fmt}</div>
+                                    <div class="small text-muted mb-1 fw-bold text-uppercase" style="font-size: 0.65rem">Teto p/ Milhas</div>
+                                    <div class="points-badge mb-1">${teto.toLocaleString('pt-BR')} pts</div>
                                 </div>
                                 <div class="col-md-2 text-center mt-3 mt-md-0">
-                                    <div class="small text-muted mb-2 fw-bold text-uppercase">Limite p/ Milhas</div>
-                                    <div class="points-badge mb-3">${teto.toLocaleString('pt-BR')} pts</div>
-                                    <a href="${itin.link}" target="_blank" rel="noopener noreferrer" class="btn-reservar-small">RESERVAR</a>
+                                    ${htmlCarteira}
+                                    
+                                    <div class="calculator-box">
+                                        <label class="field-label" style="font-size: 0.6rem">Qtd no Site Cia:</label>
+                                        <input type="number" class="custom-input calc-input" id="${idInput}" 
+                                               oninput="calcularEconomiaReal('${idInput}', ${itin.valor_sort}, ${cpmFinal}, ${saldoFinal})">
+                                        <div id="res_${idInput}"></div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <a href="${itin.link}" target="_blank" rel="noopener noreferrer" class="btn-reservar-small w-100 text-center">RESERVAR</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>`;
                 });
                 document.getElementById('resultadoArea').style.display = 'block';
             } else { alert("Nenhum voo encontrado."); }
-        } catch(e) { alert("Erro de conexão."); } 
+        } catch(e) { 
+            console.error(e);
+            alert("Erro de conexão."); 
+        } 
         finally { document.getElementById('loaderArea').style.display = 'none'; }
     }
 </script>
