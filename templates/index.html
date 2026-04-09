@@ -157,10 +157,11 @@
         .calculator-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-top: 10px; text-align: left; }
         .calc-input { font-size: 0.85rem !important; font-weight: 700 !important; border: 1px solid #cbd5e1 !important; height: 32px !important; margin-bottom: 8px; }
         
-        /* Forçando a quebra de linha com display block */
-        .economy-positive { color: #16a34a; font-weight: 800; display: block !important; width: 100%; margin-top: 5px; }
-        .economy-negative { color: #dc2626; font-weight: 800; display: block !important; width: 100%; margin-top: 5px; }
-        .lack-balance { color: #ea580c; font-size: 0.7rem; font-weight: 700; margin-top: 4px; display: block !important; }
+        /* Forçando a quebra de linha com display block e flex layout */
+        .result-container { display: flex; flex-direction: column; width: 100%; gap: 2px; }
+        .economy-positive { color: #16a34a; font-weight: 800; display: block; width: 100%; font-size: 0.85rem; }
+        .economy-negative { color: #dc2626; font-weight: 800; display: block; width: 100%; font-size: 0.85rem; }
+        .lack-balance { color: #ea580c; font-size: 0.7rem; font-weight: 700; margin-top: 4px; display: block; }
 
         .flight-info-badge { 
             background: rgba(241, 245, 249, 0.8); 
@@ -372,17 +373,19 @@
         const custoMilhasReais = (valorDigitado * (cpm / 1000)) + taxaEmbarque;
         const economia = precoDinheiro - custoMilhasReais;
         
-        // CORREÇÃO: Estrutura HTML com divs block para forçar quebra
-        let html = `<div class="mt-2 pt-2 border-top">`;
-        html += `<div class="small fw-bold text-muted">Resultado:</div>`;
-        html += `<div class="${economia > 0 ? 'economy-positive' : 'economy-negative'}">`;
-        html += `Economia Real: R$ ${economia.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>`;
+        // CORREÇÃO DE FORMATAÇÃO: Uso de localestring para forçar exatamente 2 casas decimais
+        const economiaFmt = economia.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        let html = `<div class="mt-2 pt-2 border-top result-container">`;
+        html += `<span class="small fw-bold text-muted">Resultado:</span>`;
+        html += `<span class="${economia > 0 ? 'economy-positive' : 'economy-negative'}">`;
+        html += `Economia Real: R$ ${economiaFmt}</span>`;
         
         if (valorDigitado > saldo) {
             const falta = valorDigitado - saldo;
-            html += `<div class="lack-balance"><i class="bi bi-exclamation-triangle-fill"></i> Faltam ${falta.toLocaleString('pt-BR')} pts</div>`;
+            html += `<span class="lack-balance"><i class="bi bi-exclamation-triangle-fill"></i> Faltam ${falta.toLocaleString('pt-BR')} pts</span>`;
         } else {
-            html += `<div class="text-success small mt-1" style="font-size: 0.65rem; font-weight: 700;">✅ Saldo Suficiente</div>`;
+            html += `<span class="text-success small mt-1" style="font-size: 0.65rem; font-weight: 700;">✅ Saldo Suficiente</span>`;
         }
         html += `</div>`;
 
@@ -428,8 +431,10 @@
                 
                 data.dados.forEach((itin, index) => {
                     const taxa = itin.tipo === "RT" ? 480 : 240;
-                    const milheiro_base = params.custo_milheiro || 17.50;
-                    const teto = Math.floor((itin.valor_sort - taxa) / (milheiro_base / 1000));
+                    
+                    // CORREÇÃO HIERARQUIA DE TETO: Prioriza o CPM Real da Carteira se identificado
+                    const cpmParaCalculoTeto = itin.carteira_info ? itin.carteira_info.cpm : (params.custo_milheiro || 17.50);
+                    const teto = Math.floor((itin.valor_sort - taxa) / (cpmParaCalculoTeto / 1000));
                     
                     const idInput = `calc_milhas_${index}`;
                     const cpmFinal = itin.carteira_info ? itin.carteira_info.cpm : params.custo_milheiro;
