@@ -4,7 +4,7 @@ import os
 import csv
 import io
 from datetime import datetime
-from sqlalchemy import func # Importado para cálculos agregados no SQL
+from sqlalchemy import func 
 
 # Módulos do Projeto
 from engine import buscar_voos_completos
@@ -13,7 +13,7 @@ from utils.helpers import (
     carregar_base_sniper, 
     limpar_nome_aeroporto, 
     converter_moeda_para_float,
-    identificar_programa_fidelidade # Nova função adicionada no helpers.py
+    identificar_programa_fidelidade 
 )
 
 # Importação do Blueprint
@@ -45,24 +45,38 @@ def load_user(user_id):
 # --- CARREGAMENTO DE DADOS INICIAIS ---
 db_aeroportos = carregar_base_sniper('aeroportos_sniper.json')
 
-# --- FUNÇÕES DE INTELIGÊNCIA DE DADOS (V2.7.1) ---
+# --- FUNÇÕES DE INTELIGÊNCIA DE DADOS (V2.7.3) ---
 def obter_resumo_carteira_usuario(user_id):
-    """Consolida saldos e calcula o CPM Médio por programa."""
+    """Consolida saldos, separa Milhas de Pontos e calcula CPM."""
     saldos = db.session.query(
         Carteira.programa,
         func.sum(Carteira.quantidade).label('total_qtd'),
         func.sum(Carteira.valor_pago).label('total_valor')
     ).filter_by(user_id=user_id).group_by(Carteira.programa).all()
 
-    resumo = {}
+    resumo = {
+        'programas': {},  # Milhas (Smiles, Azul, Latam)
+        'bancos': {}      # Pontos (Livelo, Esfera)
+    }
+    
+    # Lista de programas que são considerados bancos para paridade
+    PROGRAMAS_BANCO = ['Livelo', 'Esfera']
+
     for s in saldos:
         qtd = float(s.total_qtd)
         valor = float(s.total_valor)
         cpm = (valor / (qtd / 1000)) if qtd > 0 else 0
-        resumo[s.programa] = {
+        
+        dados = {
             'saldo': qtd,
             'cpm': round(cpm, 2)
         }
+
+        if s.programa in PROGRAMAS_BANCO:
+            resumo['bancos'][s.programa] = dados
+        else:
+            resumo['programas'][s.programa] = dados
+            
     return resumo
 
 # --- ROTAS DE AUTENTICAÇÃO ---
@@ -132,21 +146,25 @@ def buscar():
     # 1. Executa a busca SNIPER no Engine
     res = buscar_voos_completos(d['origem'].upper(), d['destino'].upper(), d['data_ida'], d['data_volta'], float(d['custo_milheiro']), int(d['pax']), d['classe'])
     
-    # 2. Obtém a carteira consolidada do usuário para comparação
+    # 2. Obtém a carteira consolidada (Milhas e Bancos)
     minha_carteira = obter_resumo_carteira_usuario(current_user.id)
     
-    # 3. Inteligência de Cruzamento: Anexa informações da carteira a cada voo encontrado
+    # 3. Inteligência de Cruzamento e Transferência (V2.7.3)
     if res:
         for voo in res:
-            # Identifica qual programa nacional atende essa CIA (Ex: ITA -> Smiles)
             prog_sugerido = identificar_programa_fidelidade(voo['cia'])
             voo['programa_sugerido'] = prog_sugerido
             
-            # Se houver programa sugerido, anexa saldo e CPM real da carteira
-            if prog_sugerido and prog_sugerido in minha_carteira:
-                voo['carteira_info'] = minha_carteira[prog_sugerido]
-            else:
-                voo['carteira_info'] = None
+            # Info de saldo direto na CIA
+            info_cia = minha_carteira['programas'].get(prog_sugerido)
+            voo['carteira_info'] = info_cia
+
+            # Lógica de Sugestão de Transferência (Bônus padrão de 100% para simulação inicial)
+            # Aqui injetamos os saldos de bancos para o front-end decidir o destaque
+            voo['transferencia_possivel'] = {
+                'bancos': minha_carteira['bancos'],
+                'bonus_simulado': 1.0  # 100% de bônus
+            }
 
     # --- Salvamento no Histórico ---
     if res and len(res) > 0:
@@ -173,7 +191,6 @@ def buscar():
             db.session.rollback()
             print(f"Erro ao salvar histórico: {e}")
             
-    # Retornamos os dados + o resumo da carteira para o Front-end
     return jsonify({
         "status": "sucesso", 
         "dados": res, 

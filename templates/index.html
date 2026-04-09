@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyMiles - V2.7.2</title>
+    <title>MyMiles - V2.7.3</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/css/autoComplete.02.min.css">
@@ -153,15 +153,25 @@
         .wallet-value { color: #1e40af; font-weight: 800; font-size: 1rem; }
         .wallet-cpm { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
         
-        /* Ajustes Calculadora REVISADOS V2.7.2 */
         .calculator-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-top: 10px; text-align: left; }
         .calc-input { font-size: 0.85rem !important; font-weight: 700 !important; border: 1px solid #cbd5e1 !important; height: 32px !important; margin-bottom: 8px; }
         
-        /* Forçando a quebra de linha com display block e flex layout */
         .result-container { display: flex; flex-direction: column; width: 100%; gap: 2px; }
         .economy-positive { color: #16a34a; font-weight: 800; display: block; width: 100%; font-size: 0.85rem; }
         .economy-negative { color: #dc2626; font-weight: 800; display: block; width: 100%; font-size: 0.85rem; }
         .lack-balance { color: #ea580c; font-size: 0.7rem; font-weight: 700; margin-top: 4px; display: block; }
+
+        .suggestion-badge { 
+            background: #eff6ff; 
+            color: #1d4ed8; 
+            font-size: 0.65rem; 
+            font-weight: 700; 
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            border: 1px solid #bfdbfe;
+            margin-top: 5px;
+            display: block;
+        }
 
         .flight-info-badge { 
             background: rgba(241, 245, 249, 0.8); 
@@ -209,7 +219,7 @@
             </a>
         </div>
         <h1 class="mb-1">MyMiles</h1>
-        <p class="opacity-75 small fw-bold">Inteligência em Passagens e Milhas • V2.7.2</p>
+        <p class="opacity-75 small fw-bold">Inteligência em Passagens e Milhas • V2.7.3</p>
         {% if user %}<p class="mt-2 small opacity-50">Olá, <strong>{{ user.nome }}</strong></p>{% endif %}
     </div>
 </div>
@@ -310,6 +320,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/autoComplete.min.js"></script>
 <script>
+    let globalResultados = []; // Para armazenar os dados da busca e acessar na calculadora
     const selecionados = { 
         origem: "{{ filtros.origem if filtros else '' }}", 
         destino: "{{ filtros.destino if filtros else '' }}" 
@@ -359,7 +370,8 @@
     setupAutocomplete("origem");
     setupAutocomplete("destino");
 
-    function calcularEconomiaReal(idInput, precoDinheiro, cpm, saldo) {
+    function calcularEconomiaReal(idInput, indexVoo) {
+        const itin = globalResultados[indexVoo];
         const input = document.getElementById(idInput);
         const resDiv = document.getElementById('res_' + idInput);
         const valorDigitado = parseFloat(input.value) || 0;
@@ -369,21 +381,40 @@
             return;
         }
 
+        const cpmBase = itin.carteira_info ? itin.carteira_info.cpm : parseFloat(document.getElementById('custo_milheiro').value);
         const taxaEmbarque = 240; 
-        const custoMilhasReais = (valorDigitado * (cpm / 1000)) + taxaEmbarque;
-        const economia = precoDinheiro - custoMilhasReais;
+        const custoMilhasReais = (valorDigitado * (cpmBase / 1000)) + taxaEmbarque;
+        const economia = itin.valor_sort - custoMilhasReais;
         
-        // CORREÇÃO DE FORMATAÇÃO: Uso de localestring para forçar exatamente 2 casas decimais
         const economiaFmt = economia.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        const saldoAtual = itin.carteira_info ? itin.carteira_info.saldo : 0;
 
         let html = `<div class="mt-2 pt-2 border-top result-container">`;
         html += `<span class="small fw-bold text-muted">Resultado:</span>`;
         html += `<span class="${economia > 0 ? 'economy-positive' : 'economy-negative'}">`;
         html += `Economia Real: R$ ${economiaFmt}</span>`;
         
-        if (valorDigitado > saldo) {
-            const falta = valorDigitado - saldo;
+        if (valorDigitado > saldoAtual) {
+            const falta = valorDigitado - saldoAtual;
             html += `<span class="lack-balance"><i class="bi bi-exclamation-triangle-fill"></i> Faltam ${falta.toLocaleString('pt-BR')} pts</span>`;
+
+            // LÓGICA DE TRANSFERÊNCIA V2.7.3
+            if (itin.transferencia_possivel && itin.transferencia_possivel.bancos) {
+                let bancos = itin.transferencia_possivel.bancos;
+                let bonus = itin.transferencia_possivel.bonus_simulado;
+                let sugestoes = [];
+
+                for (let b in bancos) {
+                    // Se o saldo no banco + bônus cobre o que falta
+                    if ((bancos[b].saldo * (1 + bonus)) >= falta) {
+                        sugestoes.push(b);
+                    }
+                }
+
+                if (sugestoes.length > 0) {
+                    html += `<span class="suggestion-badge">💡 Use pontos ${sugestoes.join(' ou ')} (${(bonus*100)}% bônus)</span>`;
+                }
+            }
         } else {
             html += `<span class="text-success small mt-1" style="font-size: 0.65rem; font-weight: 700;">✅ Saldo Suficiente</span>`;
         }
@@ -426,19 +457,16 @@
             const data = await res.json();
             
             if(data.status === "sucesso") {
+                globalResultados = data.dados; // Salva para uso na calculadora
                 const container = document.getElementById('tabelaResultados');
                 container.innerHTML = "";
                 
                 data.dados.forEach((itin, index) => {
                     const taxa = itin.tipo === "RT" ? 480 : 240;
-                    
-                    // CORREÇÃO HIERARQUIA DE TETO: Prioriza o CPM Real da Carteira se identificado
                     const cpmParaCalculoTeto = itin.carteira_info ? itin.carteira_info.cpm : (params.custo_milheiro || 17.50);
                     const teto = Math.floor((itin.valor_sort - taxa) / (cpmParaCalculoTeto / 1000));
                     
                     const idInput = `calc_milhas_${index}`;
-                    const cpmFinal = itin.carteira_info ? itin.carteira_info.cpm : params.custo_milheiro;
-                    const saldoFinal = itin.carteira_info ? itin.carteira_info.saldo : 0;
 
                     let htmlCarteira = "";
                     if (itin.carteira_info) {
@@ -503,7 +531,7 @@
                                     <div class="calculator-box">
                                         <label class="field-label" style="font-size: 0.6rem">Qtd no Site Cia:</label>
                                         <input type="number" class="custom-input calc-input" id="${idInput}" 
-                                               oninput="calcularEconomiaReal('${idInput}', ${itin.valor_sort}, ${cpmFinal}, ${saldoFinal})">
+                                               oninput="calcularEconomiaReal('${idInput}', ${index})">
                                         <div id="res_${idInput}"></div>
                                     </div>
 
