@@ -1,0 +1,71 @@
+✈️ Manual do Usuário: MyMiles (V2.7.3)
+Sua central de inteligência para emissão de passagens com milhas.
+
+O MyMiles não é apenas um buscador de voos; é uma ferramenta de auditoria que garante que você nunca gaste suas milhas por um valor 
+menor do que elas realmente valem.
+
+1. O Conceito Sniper (CPM Real)
+Antes de buscar, entenda o CPM (Custo por Milheiro).
+
+O que é: Quanto você pagou por cada 1.000 milhas na sua carteira.
+
+A Regra de Ouro: O MyMiles calcula o "Teto de Milhas". Se o site da cia aérea pedir mais milhas do que o teto exibido, não emita. 
+É mais barato pagar em dinheiro.
+
+2. Primeiros Passos: Minha Carteira
+Para o sistema ser inteligente, ele precisa saber o que você tem.
+
+Acesse o menu Minha Carteira.
+
+Cadastre seus saldos em Cias Aéreas (Smiles, Azul, Latam).
+
+Cadastre seus saldos em Bancos (Livelo, Esfera), informando o valor pago por esses pontos.
+
+O sistema calculará automaticamente o seu CPM Médio.
+
+3. Realizando uma Busca "Sniper"
+Na tela inicial, preencha os campos de busca:
+
+Origem e Destino: Use o sistema de autocompletar (aeroportos mundiais).
+
+Milheiro R$: Se você não tiver milhas na carteira, informe um valor de mercado (ex: R$ 17,50). Se você tiver milhas, o 
+sistema priorizará o seu custo real.
+
+Botão VER: O sistema varre a API Kiwi em busca das melhores tarifas em dinheiro para servir de base.
+
+4. Entendendo os Resultados (Cards de Voo)
+Cada card apresenta informações cruciais:
+
+Dinheiro c/ Taxas: O preço real que você pagaria no cartão de crédito.
+
+Teto p/ Milhas: O valor máximo em milhas que vale a pena pagar. Se o site da cia pedir 20k e o teto for 25k, é uma excelente 
+oportunidade!
+
+Programa Sugerido: O sistema indica qual programa (Smiles, Azul, etc.) atende aquele voo específico.
+
+5. Calculadora de Economia Real
+Dentro de cada card, você encontrará uma calculadora dinâmica:
+
+Qtd no Site Cia: Digite quantas milhas a cia aérea está pedindo pelo voo.
+
+Resultado: O sistema subtrai o custo das milhas (baseado no seu CPM) + taxas de embarque do preço em dinheiro.
+
+Economia: Se ficar verde, você está lucrando na emissão!
+
+6. Inteligência de Transferência (Novidade V2.7.3)
+Se o sistema detectar que você não tem saldo suficiente na Cia Aérea para uma emissão vantajosa:
+
+Um alerta aparecerá: "💡 Use pontos Esfera ou Livelo".
+
+O MyMiles calcula se, com um bônus de transferência (ex: 100%), seus pontos do banco cobrem a falta, transformando pontos parados 
+em passagens emitidas.
+
+7. Histórico de Buscas
+Não perca suas pesquisas. Clique em Histórico para:
+
+Revisar oportunidades encontradas anteriormente.
+
+Exportar seus dados para CSV para análises mais profundas em planilhas.
+
+Dica Sniper: O MyMiles mostra o preço em dinheiro como referência. Sempre verifique no site da cia aérea se existem outros horários 
+disponíveis para milhas na mesma data encontrada.
